@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
 import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
+const { heroState } = useHeroCustomizer()
 
 function startDesigning() {
   window.open('https://github.com/mahammed80/nex-design-v2/releases/latest', '_blank')
@@ -16,13 +18,14 @@ function startDesigning() {
 
     <div v-reveal class="max-w-4xl mx-auto relative z-10 space-y-8 flex flex-col items-center reveal-up">
       <!-- Center Emblem -->
-      <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
+      <div class="w-16 h-16 rounded-2xl bg-white/5 border flex items-center justify-center shadow-lg" :style="{ borderColor: `${heroState.themeColor}50` }">
         <NexLogo :size="36" variant="white" :show-text="false" />
       </div>
 
       <!-- Heading -->
       <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-        Your next great<br />design starts here.
+        Your next great<br />
+        <span class="text-transparent bg-clip-text" :style="{ backgroundImage: `linear-gradient(to right, ${heroState.gradientFrom}, ${heroState.gradientTo})` }">design starts here.</span>
       </h2>
 
       <p class="text-slate-400 font-light text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
@@ -33,7 +36,8 @@ function startDesigning() {
         <button
           @click="startDesigning"
           type="button"
-          class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-[#121214] hover:bg-[#faf9f6] font-bold font-mono text-xs tracking-widest shadow-md transition-all duration-200"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold font-mono text-xs tracking-widest shadow-md transition-all duration-200"
+          :style="{ backgroundColor: heroState.themeColor, color: '#ffffff' }"
         >
           START DESIGNING FREE
         </button>
@@ -47,3 +51,4 @@ function startDesigning() {
     </div>
   </section>
 </template>
+

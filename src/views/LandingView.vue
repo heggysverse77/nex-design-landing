@@ -4,6 +4,7 @@ import AnimatedLoader from '@/components/landing/AnimatedLoader.vue'
 import MarbleBackground from '@/components/landing/MarbleBackground.vue'
 import LandingNavbar from '@/components/landing/LandingNavbar.vue'
 import LandingHero from '@/components/landing/LandingHero.vue'
+import BreakTheWebsite from '@/components/landing/BreakTheWebsite.vue'
 import ProductShowcase from '@/components/landing/ProductShowcase.vue'
 import DesignGuide from '@/components/landing/DesignGuide.vue'
 import Prototyping from '@/components/landing/Prototyping.vue'
@@ -50,6 +51,7 @@ function onLoaderComplete() {
     <div class="relative z-10 transition-opacity duration-700" :class="{ 'opacity-100': isLoaded, 'opacity-0': !isLoaded }">
       <LandingNavbar />
       <LandingHero />
+      <BreakTheWebsite />
       <ProductShowcase />
       <DesignGuide />
       <Prototyping />
@@ -65,3 +67,4 @@ function onLoaderComplete() {
     </div>
   </div>
 </template>
+

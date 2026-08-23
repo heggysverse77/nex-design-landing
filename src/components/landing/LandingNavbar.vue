@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
 import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
+const { heroState } = useHeroCustomizer()
 const isScrolled = ref(false)
 
 function handleScroll() {
@@ -41,6 +43,13 @@ function navigateToEditor() {
 
       <!-- Middle: Navigation Links -->
       <nav class="hidden md:flex items-center gap-8 text-[11px] font-mono tracking-widest text-[#a1a1aa]">
+        <a
+          href="#canvas-reveal"
+          class="font-bold transition-colors flex items-center gap-1"
+          :style="{ color: heroState.themeColor }"
+        >
+          <span>🔥 BUILD WEBPAGE</span>
+        </a>
         <a href="#features" class="hover:text-white transition-colors">PRODUCT</a>
         <a href="#showcase" class="hover:text-white transition-colors">FEATURES</a>
         <a href="#design-guide" class="hover:text-white transition-colors">DESIGN GUIDE</a>
@@ -69,7 +78,8 @@ function navigateToEditor() {
         <button
           @click="navigateToEditor"
           type="button"
-          class="text-xs font-mono font-bold px-4 py-2 rounded-lg bg-[#eae8e4] text-[#121214] hover:bg-white transition-all duration-200 shadow-sm"
+          class="text-xs font-mono font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-sm text-white"
+          :style="{ backgroundColor: heroState.themeColor }"
         >
           Start Designing
         </button>
@@ -77,3 +87,4 @@ function navigateToEditor() {
     </div>
   </header>
 </template>
+

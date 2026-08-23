@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
+
+const { heroState, globalBadgeStyle } = useHeroCustomizer()
 </script>
 
 <template>
@@ -6,7 +9,7 @@
     <div class="max-w-7xl mx-auto">
       <!-- Section Header -->
       <div v-reveal class="text-center max-w-3xl mx-auto mb-20 reveal-up">
-        <h2 class="text-xs font-mono tracking-[0.3em] uppercase text-[#9c2727] mb-4">Complete Canvas Environment</h2>
+        <h2 class="text-xs font-mono tracking-[0.3em] uppercase mb-4" :style="{ color: heroState.themeColor }">Complete Canvas Environment</h2>
         <h3 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#f5f4f0] leading-[1.15]">
           Everything you need to turn ideas into interfaces.
         </h3>
@@ -46,7 +49,7 @@
               <!-- Graphic Widgets Mockup -->
               <div class="grid grid-cols-3 gap-4 pt-2">
                 <div class="p-3 border border-white/5 rounded-lg space-y-2 bg-[#282624]">
-                  <div class="w-6 h-6 rounded bg-[#9c2727]/10 flex items-center justify-center text-[10px] text-[#9c2727] font-bold">1</div>
+                  <div class="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold" :style="{ backgroundColor: `${heroState.themeColor}20`, color: heroState.themeColor }">1</div>
                   <div class="h-2 w-12 bg-white/15 rounded" />
                 </div>
                 <div class="p-3 border border-white/5 rounded-lg space-y-2 bg-[#282624]">
@@ -73,7 +76,7 @@
                   <span>100%</span>
                 </div>
                 <div class="space-y-1 my-auto">
-                  <div class="h-2 w-10 bg-[#9c2727] rounded" />
+                  <div class="h-2 w-10 rounded" :style="{ backgroundColor: heroState.themeColor }" />
                   <div class="h-1.5 w-12 bg-white/20 rounded" />
                 </div>
                 <div class="h-3 w-full bg-white rounded-md" />
@@ -83,7 +86,7 @@
               <div class="space-y-1.5 text-xs font-mono">
                 <div class="font-bold text-[#f5f4f0]">mobile_preview.flow</div>
                 <div class="text-[10px] text-[#a1a1aa]">Prototype connection linked</div>
-                <div class="text-[9px] text-[#9c2727] bg-[#9c2727]/10 border border-[#9c2727]/30 px-2 py-0.5 rounded inline-block">
+                <div class="text-[9px] border px-2 py-0.5 rounded inline-block" :style="globalBadgeStyle">
                   Device: iPhone 15 Pro
                 </div>
               </div>
@@ -116,3 +119,4 @@
     </div>
   </section>
 </template>
+

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
 
 const router = useRouter()
+const { heroState } = useHeroCustomizer()
 
 const tiers = [
   {
@@ -41,7 +43,7 @@ function startDesigning() {
   <section id="pricing" class="relative py-28 px-6 z-10 text-[#f5f4f0] bg-white/5 backdrop-blur-[12px] border-t border-white/10">
     <div class="max-w-7xl mx-auto">
       <div v-reveal class="text-center max-w-3xl mx-auto mb-20 reveal-up">
-        <h2 class="text-xs font-mono tracking-[0.3em] uppercase text-[#9c2727] mb-4">Pricing Plans</h2>
+        <h2 class="text-xs font-mono tracking-[0.3em] uppercase mb-4" :style="{ color: heroState.themeColor }">Pricing Plans</h2>
         <h3 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#f5f4f0]">
           Start building your next idea.
         </h3>
@@ -59,15 +61,17 @@ function startDesigning() {
           class="p-8 rounded-2xl border flex flex-col justify-between relative transition-all duration-300 reveal-scale"
           :class="[
             tier.recommended
-              ? 'border-[#ff5c5c] bg-white/10 backdrop-blur-md shadow-lg scale-105 z-10'
+              ? 'bg-white/10 backdrop-blur-md shadow-lg scale-105 z-10'
               : 'border-white/5 bg-white/5 backdrop-blur-sm shadow-sm',
             `delay-${i * 100}`
           ]"
+          :style="tier.recommended ? { borderColor: heroState.themeColor } : {}"
         >
           <!-- Recommended Badge -->
           <span
             v-if="tier.recommended"
-            class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#9c2727] text-white text-[9px] font-bold tracking-widest font-mono uppercase"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-[9px] font-bold tracking-widest font-mono uppercase shadow"
+            :style="{ backgroundColor: heroState.themeColor }"
           >
             RECOMMENDED
           </span>
@@ -86,7 +90,7 @@ function startDesigning() {
             <!-- Features list -->
             <ul class="space-y-3 pt-4 border-t border-white/5 text-xs text-[#a1a1aa] font-light">
               <li v-for="feat in tier.features" :key="feat" class="flex items-center gap-2">
-                <span class="text-[#ff5c5c] font-bold">✓</span>
+                <span class="font-bold" :style="{ color: heroState.themeColor }">✓</span>
                 {{ feat }}
               </li>
             </ul>
@@ -95,11 +99,10 @@ function startDesigning() {
           <button
             @click="startDesigning"
             type="button"
-            class="w-full mt-8 py-3 rounded-xl font-bold font-mono text-[10px] uppercase tracking-wider transition-all duration-200"
+            class="w-full mt-8 py-3 rounded-xl font-bold font-mono text-[10px] uppercase tracking-wider transition-all duration-200 shadow"
+            :style="tier.recommended ? { backgroundColor: heroState.themeColor, color: '#ffffff' } : {}"
             :class="[
-              tier.recommended
-                ? 'bg-[#9c2727] text-white hover:bg-[#7f1d1d]'
-                : 'bg-[#1c1a18] border border-white/5 text-white hover:bg-white hover:text-[#121214]'
+              !tier.recommended && 'bg-[#1c1a18] border border-white/5 text-white hover:bg-white hover:text-[#121214]'
             ]"
           >
             {{ tier.cta }}
@@ -109,3 +112,4 @@ function startDesigning() {
     </div>
   </section>
 </template>
+
