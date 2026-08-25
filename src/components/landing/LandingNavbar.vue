@@ -2,10 +2,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
+import { useAuth } from '@/composables/useAuth'
 import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
 const { heroState } = useHeroCustomizer()
+const { currentUser, openAuth, openStatusModal } = useAuth()
 const isScrolled = ref(false)
 
 function handleScroll() {
@@ -19,10 +21,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
-
-function navigateToEditor() {
-  window.open('https://github.com/mahammed80/nex-design-v2/releases/latest', '_blank')
-}
 </script>
 
 <template>
@@ -67,24 +65,46 @@ function navigateToEditor() {
       </nav>
 
       <!-- Right: Action Buttons -->
-      <div class="flex items-center gap-4">
-        <button
-          @click="navigateToEditor"
-          type="button"
-          class="text-[11px] font-mono text-[#a1a1aa] hover:text-white transition-colors"
-        >
-          Log in
-        </button>
-        <button
-          @click="navigateToEditor"
-          type="button"
-          class="text-xs font-mono font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-sm text-white"
-          :style="{ backgroundColor: heroState.themeColor }"
-        >
-          Start Designing
-        </button>
+      <div class="flex items-center gap-3">
+        <!-- If logged in: User Profile Pill -->
+        <template v-if="currentUser">
+          <button
+            @click="openStatusModal"
+            type="button"
+            class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all shadow-sm"
+          >
+            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-red-700 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+              {{ currentUser.name.charAt(0).toUpperCase() }}
+            </div>
+            <span class="text-xs font-medium max-w-[100px] truncate">{{ currentUser.name.split(' ')[0] }}</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
+              #{{ currentUser.waitlist_number || '1' }}
+            </span>
+          </button>
+        </template>
+
+        <!-- If not logged in: Sign In & Early Access Buttons -->
+        <template v-else>
+          <button
+            @click="openAuth('signin')"
+            type="button"
+            class="text-[11px] font-mono text-[#a1a1aa] hover:text-white transition-colors px-2 py-1"
+          >
+            Sign In
+          </button>
+          <button
+            @click="openAuth('signup')"
+            type="button"
+            class="text-xs font-mono font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-sm text-white hover:opacity-90 flex items-center gap-1.5"
+            :style="{ backgroundColor: heroState.themeColor }"
+          >
+            <span>Early Access</span>
+            <span class="text-[10px] opacity-80 font-normal">Beta</span>
+          </button>
+        </template>
       </div>
     </div>
   </header>
 </template>
+
 

@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
+import { useAuth } from '@/composables/useAuth'
 import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
 const { heroState } = useHeroCustomizer()
+const { openAuth } = useAuth()
 
 function startDesigning() {
-  window.open('https://github.com/mahammed80/nex-design-v2/releases/latest', '_blank')
+  openAuth('signup')
 }
 </script>
+
 
 <template>
   <section class="relative py-32 px-6 z-10 text-white bg-gradient-to-b from-[#121214]/60 to-[#000000]/80 backdrop-blur-[16px] overflow-hidden text-center select-none border-t border-white/10">

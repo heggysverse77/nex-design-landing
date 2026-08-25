@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
 import AnimatedLoader from '@/components/landing/AnimatedLoader.vue'
 import MarbleBackground from '@/components/landing/MarbleBackground.vue'
 import LandingNavbar from '@/components/landing/LandingNavbar.vue'
@@ -17,10 +18,25 @@ import WhyNex from '@/components/landing/WhyNex.vue'
 import Pricing from '@/components/landing/Pricing.vue'
 import FinalCTA from '@/components/landing/FinalCTA.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
+import UserStatusModal from '@/components/auth/UserStatusModal.vue'
 
 const isLoaded = ref(false)
+const { 
+  currentUser, 
+  isAuthModalOpen, 
+  authModalTab, 
+  isStatusModalOpen, 
+  totalRegistered,
+  checkAuth, 
+  closeAuth, 
+  closeStatusModal,
+  setUser,
+  logout 
+} = useAuth()
 
 onMounted(() => {
+  checkAuth()
   document.documentElement.classList.add('scrollable-page')
   document.body.classList.add('scrollable-page')
   const app = document.getElementById('app')
@@ -65,6 +81,23 @@ function onLoaderComplete() {
       <FinalCTA />
       <LandingFooter />
     </div>
+
+    <!-- Auth & Early Access Modals -->
+    <AuthModal
+      :is-open="isAuthModalOpen"
+      :initial-tab="authModalTab"
+      @close="closeAuth"
+      @success="setUser"
+    />
+
+    <UserStatusModal
+      :is-open="isStatusModalOpen"
+      :user="currentUser"
+      :total-registered="totalRegistered"
+      @close="closeStatusModal"
+      @logout="logout"
+    />
   </div>
 </template>
+
 

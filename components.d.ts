@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AnimatedLoader: typeof import('./src/components/landing/AnimatedLoader.vue')['default']
+    AuthModal: typeof import('./src/components/auth/AuthModal.vue')['default']
     BreakTheWebsite: typeof import('./src/components/landing/BreakTheWebsite.vue')['default']
     Collaboration: typeof import('./src/components/landing/Collaboration.vue')['default']
     ComponentsSystem: typeof import('./src/components/landing/ComponentsSystem.vue')['default']
@@ -48,6 +49,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Typography: typeof import('./src/components/landing/Typography.vue')['default']
+    UserStatusModal: typeof import('./src/components/auth/UserStatusModal.vue')['default']
     WhyNex: typeof import('./src/components/landing/WhyNex.vue')['default']
   }
 }
