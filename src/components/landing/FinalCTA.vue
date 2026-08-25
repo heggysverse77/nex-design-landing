@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
-import { useAuth } from '@/composables/useAuth'
 import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
 const { heroState } = useHeroCustomizer()
-const { openAuth } = useAuth()
 
 function startDesigning() {
-  openAuth('signup')
+  router.push('/early-access')
 }
 </script>
+
 
 
 <template>

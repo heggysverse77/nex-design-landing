@@ -7,7 +7,7 @@ import NexLogo from './NexLogo.vue'
 
 const router = useRouter()
 const { heroState } = useHeroCustomizer()
-const { currentUser, openAuth, openStatusModal } = useAuth()
+const { currentUser } = useAuth()
 const isScrolled = ref(false)
 
 function handleScroll() {
@@ -28,7 +28,7 @@ onUnmounted(() => {
     class="fixed top-0 inset-x-0 z-[100] transition-all duration-300 select-none animate-slide-down"
     :class="[
       isScrolled
-        ? 'py-3 bg-[#000000]/50 border-b border-white/5 backdrop-blur-md shadow-sm'
+        ? 'py-3 bg-[#000000]/60 border-b border-white/5 backdrop-blur-md shadow-sm'
         : 'py-6 bg-transparent border-b border-transparent'
     ]"
   >
@@ -43,10 +43,11 @@ onUnmounted(() => {
       <nav class="hidden md:flex items-center gap-8 text-[11px] font-mono tracking-widest text-[#a1a1aa]">
         <a
           href="#canvas-reveal"
-          class="font-bold transition-colors flex items-center gap-1"
+          class="font-bold transition-colors flex items-center gap-1.5"
           :style="{ color: heroState.themeColor }"
         >
-          <span>🔥 BUILD WEBPAGE</span>
+          <span class="w-1.5 h-1.5 rounded-full animate-pulse" :style="{ backgroundColor: heroState.themeColor }" />
+          <span>STUDIO ENGINE</span>
         </a>
         <a href="#features" class="hover:text-white transition-colors">PRODUCT</a>
         <a href="#showcase" class="hover:text-white transition-colors">FEATURES</a>
@@ -66,45 +67,43 @@ onUnmounted(() => {
 
       <!-- Right: Action Buttons -->
       <div class="flex items-center gap-3">
-        <!-- If logged in: User Profile Pill -->
+        <!-- If logged in: User Profile Button -->
         <template v-if="currentUser">
-          <button
-            @click="openStatusModal"
-            type="button"
+          <router-link
+            to="/account"
             class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all shadow-sm"
           >
-            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-red-700 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white shadow-sm font-mono">
               {{ currentUser.name.charAt(0).toUpperCase() }}
             </div>
             <span class="text-xs font-medium max-w-[100px] truncate">{{ currentUser.name.split(' ')[0] }}</span>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
               #{{ currentUser.waitlist_number || '1' }}
             </span>
-          </button>
+          </router-link>
         </template>
 
         <!-- If not logged in: Sign In & Early Access Buttons -->
         <template v-else>
-          <button
-            @click="openAuth('signin')"
-            type="button"
+          <router-link
+            to="/login"
             class="text-[11px] font-mono text-[#a1a1aa] hover:text-white transition-colors px-2 py-1"
           >
             Sign In
-          </button>
-          <button
-            @click="openAuth('signup')"
-            type="button"
+          </router-link>
+          <router-link
+            to="/early-access"
             class="text-xs font-mono font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-sm text-white hover:opacity-90 flex items-center gap-1.5"
             :style="{ backgroundColor: heroState.themeColor }"
           >
             <span>Early Access</span>
-            <span class="text-[10px] opacity-80 font-normal">Beta</span>
-          </button>
+            <span class="text-[10px] opacity-75 font-normal tracking-wide">Beta</span>
+          </router-link>
         </template>
       </div>
     </div>
   </header>
 </template>
+
 
 

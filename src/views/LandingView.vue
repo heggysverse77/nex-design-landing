@@ -18,22 +18,9 @@ import WhyNex from '@/components/landing/WhyNex.vue'
 import Pricing from '@/components/landing/Pricing.vue'
 import FinalCTA from '@/components/landing/FinalCTA.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
-import AuthModal from '@/components/auth/AuthModal.vue'
-import UserStatusModal from '@/components/auth/UserStatusModal.vue'
 
 const isLoaded = ref(false)
-const { 
-  currentUser, 
-  isAuthModalOpen, 
-  authModalTab, 
-  isStatusModalOpen, 
-  totalRegistered,
-  checkAuth, 
-  closeAuth, 
-  closeStatusModal,
-  setUser,
-  logout 
-} = useAuth()
+const { checkAuth } = useAuth()
 
 onMounted(() => {
   checkAuth()
@@ -81,23 +68,8 @@ function onLoaderComplete() {
       <FinalCTA />
       <LandingFooter />
     </div>
-
-    <!-- Auth & Early Access Modals -->
-    <AuthModal
-      :is-open="isAuthModalOpen"
-      :initial-tab="authModalTab"
-      @close="closeAuth"
-      @success="setUser"
-    />
-
-    <UserStatusModal
-      :is-open="isStatusModalOpen"
-      :user="currentUser"
-      :total-registered="totalRegistered"
-      @close="closeStatusModal"
-      @logout="logout"
-    />
   </div>
 </template>
+
 
 
