@@ -35,14 +35,14 @@ function startDesigning() {
       </p>
 
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto pt-4">
-        <button
-          @click="startDesigning"
-          type="button"
-          class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold font-mono text-xs tracking-widest shadow-md transition-all duration-200"
+        <router-link
+          to="/early-access"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold font-mono text-xs tracking-widest shadow-md transition-all duration-200 text-center"
           :style="{ backgroundColor: heroState.themeColor, color: '#ffffff' }"
         >
           START DESIGNING FREE
-        </button>
+        </router-link>
+
         <a
           href="#features"
           class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 text-white font-bold font-mono text-xs tracking-widest transition-all duration-200"

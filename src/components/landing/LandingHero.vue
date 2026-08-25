@@ -449,9 +449,8 @@ function startDesigning() {
       </p>
 
       <div v-reveal class="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto reveal-up delay-300">
-        <button
-          @click="startDesigning"
-          type="button"
+        <router-link
+          to="/early-access"
           class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs tracking-widest font-mono shadow-md transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
           :style="{
             backgroundColor: heroState.primaryBtnBg,
@@ -462,10 +461,10 @@ function startDesigning() {
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
-        </button>
+        </router-link>
 
         <router-link
-          to="/signup"
+          to="/early-access"
           class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 font-bold text-xs tracking-widest font-mono transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
           :style="{
             backgroundColor: heroState.secondaryBtnBg,
@@ -478,7 +477,6 @@ function startDesigning() {
           <span>{{ heroState.secondaryBtnText }}</span>
         </router-link>
 
-
         <a
           href="#features"
           class="w-full sm:w-auto px-6 py-3.5 text-xs text-[#a1a1aa] hover:text-white font-medium transition-all duration-200 flex items-center justify-center"
@@ -486,6 +484,7 @@ function startDesigning() {
           Explore Features
         </a>
       </div>
+
     </div>
 
 
