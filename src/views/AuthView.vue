@@ -64,12 +64,9 @@ const osLabels: Record<string, string> = {
 
 onMounted(async () => {
   await checkAuth()
-  if (route.path === '/login' || route.path === '/signin') {
-    currentTab.value = 'signin'
-  } else {
-    currentTab.value = 'signup'
-  }
+  currentTab.value = 'signup'
 })
+
 
 async function handleSignIn() {
   errorMessage.value = ''
