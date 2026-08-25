@@ -14,11 +14,12 @@ import NexLogo from './NexLogo.vue'
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-8 text-xs font-mono">
-        <a href="https://github.com/mahammed80/nex-design-v2/releases/latest" target="_blank" class="hover:text-white transition-colors">DOWNLOAD APP</a>
-        <a href="https://github.com/mahammed80/nex-design-v2/releases/latest" target="_blank" class="hover:text-white transition-colors">RELEASES</a>
+        <router-link to="/signup" class="hover:text-white transition-colors">EARLY ACCESS</router-link>
+        <router-link to="/login" class="hover:text-white transition-colors">ACCOUNT</router-link>
         <a href="https://github.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">GITHUB</a>
-        <a href="#" class="hover:text-white transition-colors">DOCUMENTATION</a>
+        <a href="#features" class="hover:text-white transition-colors">DOCUMENTATION</a>
       </div>
+
 
       <div class="text-xs text-slate-400 font-mono">
         &copy; {{ new Date().getFullYear() }} NEX DESIGN. All rights reserved.

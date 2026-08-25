@@ -35,9 +35,10 @@ const tiers = [
 ]
 
 function startDesigning() {
-  window.open('https://github.com/mahammed80/nex-design-v2/releases/latest', '_blank')
+  router.push('/signup')
 }
 </script>
+
 
 <template>
   <section id="pricing" class="relative py-28 px-6 z-10 text-[#f5f4f0] bg-white/5 backdrop-blur-[12px] border-t border-white/10">

@@ -238,9 +238,10 @@ onUnmounted(() => {
 })
 
 function startDesigning() {
-  window.open('https://github.com/mahammed80/nex-design-v2/releases/latest', '_blank')
+  router.push('/signup')
 }
 </script>
+
 
 <template>
   <section
@@ -463,9 +464,8 @@ function startDesigning() {
           </svg>
         </button>
 
-        <a
-          href="https://github.com/mahammed80/nex-design-v2/releases/latest"
-          target="_blank"
+        <router-link
+          to="/signup"
           class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 font-bold text-xs tracking-widest font-mono transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
           :style="{
             backgroundColor: heroState.secondaryBtnBg,
@@ -476,7 +476,8 @@ function startDesigning() {
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           <span>{{ heroState.secondaryBtnText }}</span>
-        </a>
+        </router-link>
+
 
         <a
           href="#features"
