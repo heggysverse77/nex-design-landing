@@ -5,6 +5,7 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../utils/response.php';
 require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../utils/mailer.php';
 
 $body = Response::getBody();
 
@@ -111,10 +112,17 @@ try {
     Auth::loginUser($userPayload);
     $token = Auth::generateToken($userPayload);
 
+    // Send styled Welcome & Queue confirmation email
+    try {
+        Mailer::sendWelcomeEarlyAccess($userPayload);
+    } catch (Exception $mailEx) {
+        error_log("Failed to send welcome email: " . $mailEx->getMessage());
+    }
+
     Response::success([
         'user' => $userPayload,
         'token' => $token
-    ], 'Registration successful! You have reserved your early access spot.', 201);
+    ], 'Registration successful! You have reserved your early access spot and confirmation was sent to your email.', 201);
 } catch (Exception $e) {
     Response::error('Failed to register: ' . $e->getMessage(), 500);
 }

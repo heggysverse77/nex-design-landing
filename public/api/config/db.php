@@ -16,7 +16,6 @@ class Database {
         $dbUser = getenv('DB_USERNAME') ?: '';
         $dbPass = getenv('DB_PASSWORD') ?: '';
 
-        // If local config file exists, load it
         $configFile = __DIR__ . '/config.local.php';
         if (file_exists($configFile)) {
             $config = require $configFile;
