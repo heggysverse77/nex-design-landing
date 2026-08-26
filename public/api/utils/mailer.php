@@ -1,5 +1,6 @@
 <?php
 // public/api/utils/mailer.php
+require_once __DIR__ . '/../config/env.php';
 
 class Mailer {
     private static string $host = 'smtp.hostinger.com';
@@ -9,6 +10,12 @@ class Mailer {
     private static string $fromName = 'Nex Design Studio';
 
     public static function send(string $toEmail, string $toName, string $subject, string $htmlBody, string $textBody = ''): bool {
+        self::$host = Env::get('SMTP_HOST', self::$host);
+        self::$port = (int)Env::get('SMTP_PORT', self::$port);
+        self::$user = Env::get('SMTP_USER', self::$user);
+        self::$pass = Env::get('SMTP_PASS', self::$pass);
+        self::$fromName = Env::get('MAIL_FROM_NAME', self::$fromName);
+
         $configFile = __DIR__ . '/../config/config.local.php';
         if (file_exists($configFile)) {
             $cfg = require $configFile;
@@ -16,7 +23,9 @@ class Mailer {
             if (!empty($cfg['smtp_port'])) self::$port = (int)$cfg['smtp_port'];
             if (!empty($cfg['smtp_user'])) self::$user = $cfg['smtp_user'];
             if (!empty($cfg['smtp_pass'])) self::$pass = $cfg['smtp_pass'];
+            if (!empty($cfg['from_name'])) self::$fromName = $cfg['from_name'];
         }
+
 
         $socket = @fsockopen('ssl://' . self::$host, self::$port, $errno, $errstr, 12);
         if (!$socket) {

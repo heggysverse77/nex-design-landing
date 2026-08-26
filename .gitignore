@@ -5,4 +5,8 @@ dist
 *.log
 config.local.php
 *.sqlite
+.env
+.env.local
+public/api/.env
+
 

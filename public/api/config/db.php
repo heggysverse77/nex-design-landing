@@ -1,5 +1,6 @@
 <?php
 // public/api/config/db.php
+require_once __DIR__ . '/env.php';
 
 class Database {
     private static ?PDO $instance = null;
@@ -9,12 +10,12 @@ class Database {
             return self::$instance;
         }
 
-        $dbDriver = getenv('DB_DRIVER') ?: 'sqlite';
-        $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
-        $dbPort = getenv('DB_PORT') ?: '3306';
-        $dbName = getenv('DB_DATABASE') ?: '';
-        $dbUser = getenv('DB_USERNAME') ?: '';
-        $dbPass = getenv('DB_PASSWORD') ?: '';
+        $dbDriver = Env::get('DB_DRIVER', 'mysql');
+        $dbHost = Env::get('DB_HOST', '127.0.0.1');
+        $dbPort = Env::get('DB_PORT', '3306');
+        $dbName = Env::get('DB_DATABASE', '');
+        $dbUser = Env::get('DB_USERNAME', '');
+        $dbPass = Env::get('DB_PASSWORD', '');
 
         $configFile = __DIR__ . '/config.local.php';
         if (file_exists($configFile)) {
@@ -26,6 +27,7 @@ class Database {
             $dbUser = $config['username'] ?? $dbUser;
             $dbPass = $config['password'] ?? $dbPass;
         }
+
 
         try {
             if ($dbDriver === 'mysql' && !empty($dbName) && !empty($dbUser)) {

@@ -1,0 +1,6 @@
+# Block direct access to .env, .sqlite, and sensitive files
+<FilesMatch "^(\.env|\.sqlite|.*\.sqlite|.*\.db)">
+    Require all denied
+    Order allow,deny
+    Deny from all
+</FilesMatch>
