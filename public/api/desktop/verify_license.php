@@ -8,6 +8,6 @@ require_once __DIR__ . '/../utils/auth.php';
 
 $controller = new DesktopLicenseController();
 $body = Response::getBody();
-$userFromToken = Auth::getUserFromToken();
+$userFromToken = Auth::getCurrentUser();
 
 $controller->verifyLicenseAction($body, $userFromToken);

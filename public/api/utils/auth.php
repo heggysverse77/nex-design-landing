@@ -88,4 +88,8 @@ class Auth {
         $sigBase64 = base64_encode($signature);
         return "$header.$payload.$sigBase64";
     }
+
+    public static function getUserFromToken(): ?array {
+        return self::getCurrentUser();
+    }
 }
