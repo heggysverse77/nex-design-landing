@@ -55,11 +55,11 @@ if ($checkStmt->fetch()) {
     Response::error('This email is already registered. Please sign in or use another email.');
 }
 
-// Calculate next waitlist number
-$countStmt = $db->prepare("SELECT COUNT(*) FROM users WHERE `role` = 'user'");
-$countStmt->execute();
-$currentCount = (int)$countStmt->fetchColumn();
-$waitlistNumber = $currentCount + 1;
+// Calculate next waitlist number (MAX + 1)
+$maxStmt = $db->prepare("SELECT MAX(waitlist_number) FROM users WHERE `role` = 'user'");
+$maxStmt->execute();
+$maxWaitlist = (int)$maxStmt->fetchColumn();
+$waitlistNumber = ($maxWaitlist > 0) ? $maxWaitlist + 1 : 1;
 
 $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 $now = date('Y-m-d H:i:s');

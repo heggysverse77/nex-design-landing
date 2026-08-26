@@ -161,26 +161,44 @@ class Database {
                     $db->exec("ALTER TABLE users ADD COLUMN `license_key` VARCHAR(100) NULL");
                 }
             } else {
-                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `plan_id` INT DEFAULT 1");
-                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `plan_expires_at` DATETIME NULL");
-                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `restriction_reason` VARCHAR(255) NULL");
-                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `license_key` VARCHAR(100) NULL");
+                try { $db->exec("ALTER TABLE users ADD COLUMN `password_hash` VARCHAR(255) NULL"); } catch (Exception $e) {}
+                try { $db->exec("UPDATE users SET `password_hash` = `password` WHERE `password_hash` IS NULL AND `password` IS NOT NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `user_type` VARCHAR(50) DEFAULT 'student'"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `plan_id` INT DEFAULT 1"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `plan_expires_at` DATETIME NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `institution` VARCHAR(255) DEFAULT ''"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `faculty_major` VARCHAR(255) DEFAULT ''"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `graduation_year` INT NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `student_id_number` VARCHAR(100) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `current_role` VARCHAR(150) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `portfolio_url` VARCHAR(255) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `preferred_os` VARCHAR(50) DEFAULT 'windows'"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `primary_use_case` VARCHAR(255) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `referral_source` VARCHAR(150) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `status` VARCHAR(50) DEFAULT 'active'"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `restriction_reason` VARCHAR(255) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `license_key` VARCHAR(100) NULL"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `waitlist_number` INT DEFAULT 0"); } catch (Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN `last_login_at` DATETIME NULL"); } catch (Exception $e) {}
             }
         } catch (Exception $migEx) {
             // Migration already applied or silent skip
         }
 
-        // Seed initial admin if not present
-        $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE `role` = 'admin'");
-        $stmt->execute();
-        if ((int)$stmt->fetchColumn() === 0) {
-            $adminPass = password_hash('NexAdmin2026!', PASSWORD_BCRYPT);
+        // Upsert initial admin@nex-design.online user
+        $adminPass = password_hash('NexAdmin2026!', PASSWORD_BCRYPT);
+        $checkAdmin = $db->prepare("SELECT id FROM users WHERE `email` = 'admin@nex-design.online'");
+        $checkAdmin->execute();
+        if (!$checkAdmin->fetch()) {
             $adminStmt = $db->prepare("INSERT INTO users (
                 `name`, `email`, `password_hash`, `role`, `user_type`, `plan_id`, `institution`, `faculty_major`, `graduation_year`, `preferred_os`, `status`, `waitlist_number`
             ) VALUES (
                 'Nex Administrator', 'admin@nex-design.online', :pass, 'admin', 'professional', 3, 'Nex Studio HQ', 'Product Design & Engineering', 2024, 'windows', 'active', 0
             )");
             $adminStmt->execute([':pass' => $adminPass]);
+        } else {
+            $updateAdmin = $db->prepare("UPDATE users SET `password_hash` = :pass, `role` = 'admin', `status` = 'active' WHERE `email` = 'admin@nex-design.online'");
+            $updateAdmin->execute([':pass' => $adminPass]);
         }
     }
 }

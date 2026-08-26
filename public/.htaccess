@@ -17,3 +17,12 @@
   Order allow,deny
   Deny from all
 </FilesMatch>
+
+# Prevent browser caching of index.html so users always get the latest live build
+<IfModule mod_headers.c>
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
+</IfModule>

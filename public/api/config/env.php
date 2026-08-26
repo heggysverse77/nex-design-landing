@@ -39,11 +39,9 @@ class Env {
                     $val = substr($val, 1, -1);
                 }
 
-                if (!array_key_exists($key, $_SERVER) && !array_key_exists($key, $_ENV)) {
-                    putenv("{$key}={$val}");
-                    $_ENV[$key] = $val;
-                    $_SERVER[$key] = $val;
-                }
+                putenv("{$key}={$val}");
+                $_ENV[$key] = $val;
+                $_SERVER[$key] = $val;
             }
         }
     }
