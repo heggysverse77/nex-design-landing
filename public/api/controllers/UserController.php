@@ -202,8 +202,8 @@ class UserController
             Response::error('Invalid user ID provided.');
         }
 
-        // Fetch current user
-        $userStmt = $this->db->prepare("SELECT id, name, email, license_key, plan_expires_at FROM users WHERE id = :id");
+        // Fetch current user with joined plan
+        $userStmt = $this->db->prepare("SELECT u.id, u.name, u.email, u.status, u.restriction_reason, u.license_key, u.plan_expires_at, u.plan_id, COALESCE(p.slug, 'starter') as plan_slug, COALESCE(p.name, 'Starter Package') as plan_name FROM users u LEFT JOIN plans p ON u.plan_id = p.id WHERE u.id = :id");
         $userStmt->execute([':id' => $userId]);
         $user = $userStmt->fetch();
 
@@ -211,31 +211,49 @@ class UserController
             Response::error('User account not found.', 404);
         }
 
-        // Execute action functions
-        $planInfo = $this->changePlan($userId, $planSlug);
-        $restrictionInfo = $this->restrictUser($userId, $status, $restrictionReason);
+        $currentPlanId = (int)$user['plan_id'];
+        $currentPlanSlug = $user['plan_slug'];
+        $currentPlanName = $user['plan_name'];
+        $currentStatus = $user['status'];
+        $currentReason = $user['restriction_reason'];
+        $currentKey = $user['license_key'];
+        $currentExpiresAt = $user['plan_expires_at'];
 
-        // Check key regeneration request
-        $licenseKey = $user['license_key'];
-        if (!empty($requestBody['regenerate_key']) || empty($licenseKey)) {
-            $licenseKey = $this->revokeAndRegenerateLicenseKey($userId);
+        // 1. Update Package Plan if provided
+        if (isset($requestBody['plan_slug']) && !empty($requestBody['plan_slug'])) {
+            $planInfo = $this->changePlan($userId, $requestBody['plan_slug']);
+            $currentPlanId = $planInfo['plan_id'];
+            $currentPlanSlug = $planInfo['plan_slug'];
+            $currentPlanName = $planInfo['plan_name'];
         }
 
-        // Check expiration update request
-        $expiresAt = $user['plan_expires_at'];
+        // 2. Update Status & Restriction Reason if provided
+        if (isset($requestBody['status']) && !empty($requestBody['status'])) {
+            $reason = $requestBody['restriction_reason'] ?? $currentReason;
+            $restrictionInfo = $this->restrictUser($userId, $requestBody['status'], $reason);
+            $currentStatus = $restrictionInfo['status'];
+            $currentReason = $restrictionInfo['restriction_reason'];
+        }
+
+        // 3. Regenerate License Key if requested
+        if (!empty($requestBody['regenerate_key'])) {
+            $currentKey = $this->revokeAndRegenerateLicenseKey($userId);
+        }
+
+        // 4. Update Expiry Date if requested
         if (!empty($requestBody['expiry_type'])) {
-            $expiresAt = $this->setPlanExpiration($userId, $requestBody['expiry_type'], $requestBody['custom_expiry_date'] ?? null);
+            $currentExpiresAt = $this->setPlanExpiration($userId, $requestBody['expiry_type'], $requestBody['custom_expiry_date'] ?? null);
         }
 
         Response::success([
             'user_id' => $userId,
-            'plan_id' => $planInfo['plan_id'],
-            'plan_slug' => $planInfo['plan_slug'],
-            'plan_name' => $planInfo['plan_name'],
-            'status' => $restrictionInfo['status'],
-            'restriction_reason' => $restrictionInfo['restriction_reason'],
-            'license_key' => $licenseKey,
-            'plan_expires_at' => $expiresAt
-        ], 'User package plan, expiration, and status updated successfully.');
+            'plan_id' => $currentPlanId,
+            'plan_slug' => $currentPlanSlug,
+            'plan_name' => $currentPlanName,
+            'status' => $currentStatus,
+            'restriction_reason' => $currentReason,
+            'license_key' => $currentKey,
+            'plan_expires_at' => $currentExpiresAt
+        ], 'User details updated successfully.');
     }
 }

@@ -48,11 +48,17 @@ $countStmt = $db->prepare("SELECT COUNT(*) FROM users WHERE {$whereClause}");
 $countStmt->execute($params);
 $totalRecords = (int)$countStmt->fetchColumn();
 
-// Fetch records
-$query = "SELECT id, name, email, role, user_type, institution, faculty_major, graduation_year, student_id_number, current_role, portfolio_url, preferred_os, primary_use_case, status, waitlist_number, created_at, last_login_at 
-          FROM users 
+// Fetch records with plans join
+$query = "SELECT 
+            u.id, u.name, u.email, u.role, u.user_type, u.institution, u.faculty_major, 
+            u.graduation_year, u.student_id_number, u.current_role, u.portfolio_url, 
+            u.preferred_os, u.primary_use_case, u.status, u.waitlist_number, u.created_at, u.last_login_at,
+            u.plan_id, COALESCE(p.slug, 'starter') AS plan_slug, COALESCE(p.name, 'Starter Package') AS plan_name,
+            u.plan_expires_at, u.restriction_reason, u.license_key
+          FROM users u
+          LEFT JOIN plans p ON u.plan_id = p.id
           WHERE {$whereClause} 
-          ORDER BY id DESC 
+          ORDER BY u.id DESC 
           LIMIT {$limit} OFFSET {$offset}";
 
 $dataStmt = $db->prepare($query);
