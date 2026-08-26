@@ -75,7 +75,46 @@ class Database {
         $isSqlite = ($driver === 'sqlite');
         
         $autoIncrement = $isSqlite ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'INT AUTO_INCREMENT PRIMARY KEY';
+
+        // 1. Create plans table
+        $plansSql = "CREATE TABLE IF NOT EXISTS plans (
+            `id` {$autoIncrement},
+            `slug` VARCHAR(50) NOT NULL UNIQUE,
+            `name` VARCHAR(100) NOT NULL,
+            `price_monthly` DECIMAL(10,2) DEFAULT 0.00,
+            `max_devices` INT DEFAULT 1,
+            `max_resolution` VARCHAR(20) DEFAULT '1080p',
+            `ai_features` TINYINT(1) DEFAULT 0,
+            `cloud_rendering` TINYINT(1) DEFAULT 0,
+            `team_collaboration` TINYINT(1) DEFAULT 0,
+            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+        )";
+        $db->exec($plansSql);
+
+        // Seed 3 default packages if empty
+        $planCountStmt = $db->query("SELECT COUNT(*) FROM plans");
+        if ((int)$planCountStmt->fetchColumn() === 0) {
+            $seedPlans = [
+                ['slug' => 'starter', 'name' => 'Starter Package', 'price' => 0.00, 'devices' => 1, 'res' => '1080p', 'ai' => 0, 'cloud' => 0, 'team' => 0],
+                ['slug' => 'professional', 'name' => 'Professional Package', 'price' => 29.00, 'devices' => 3, 'res' => '4K', 'ai' => 1, 'cloud' => 1, 'team' => 0],
+                ['slug' => 'teams', 'name' => 'Teams Studio Package', 'price' => 79.00, 'devices' => 10, 'res' => '8K', 'ai' => 1, 'cloud' => 1, 'team' => 1]
+            ];
+            $insertPlanStmt = $db->prepare("INSERT INTO plans (`slug`, `name`, `price_monthly`, `max_devices`, `max_resolution`, `ai_features`, `cloud_rendering`, `team_collaboration`) VALUES (:slug, :name, :price, :devices, :res, :ai, :cloud, :team)");
+            foreach ($seedPlans as $p) {
+                $insertPlanStmt->execute([
+                    ':slug' => $p['slug'],
+                    ':name' => $p['name'],
+                    ':price' => $p['price'],
+                    ':devices' => $p['devices'],
+                    ':res' => $p['res'],
+                    ':ai' => $p['ai'],
+                    ':cloud' => $p['cloud'],
+                    ':team' => $p['team']
+                ]);
+            }
+        }
         
+        // 2. Create users table with plan_id Foreign Key
         $sql = "CREATE TABLE IF NOT EXISTS users (
             `id` {$autoIncrement},
             `name` VARCHAR(150) NOT NULL,
@@ -83,6 +122,8 @@ class Database {
             `password_hash` VARCHAR(255) NOT NULL,
             `role` VARCHAR(30) DEFAULT 'user',
             `user_type` VARCHAR(50) NOT NULL,
+            `plan_id` INT DEFAULT 1,
+            `plan_expires_at` DATETIME NULL,
             `institution` VARCHAR(255) NOT NULL,
             `faculty_major` VARCHAR(255) NOT NULL,
             `graduation_year` INT NULL,
@@ -93,6 +134,8 @@ class Database {
             `primary_use_case` VARCHAR(255) NULL,
             `referral_source` VARCHAR(150) NULL,
             `status` VARCHAR(50) DEFAULT 'pending',
+            `restriction_reason` VARCHAR(255) NULL,
+            `license_key` VARCHAR(100) NULL,
             `waitlist_number` INT DEFAULT 0,
             `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
             `last_login_at` DATETIME NULL
@@ -100,15 +143,42 @@ class Database {
 
         $db->exec($sql);
 
+        // Safe Auto-migrations for existing databases
+        try {
+            if ($isSqlite) {
+                $cols = $db->query("PRAGMA table_info(users)")->fetchAll();
+                $existingCols = array_column($cols, 'name');
+                if (!in_array('plan_id', $existingCols)) {
+                    $db->exec("ALTER TABLE users ADD COLUMN `plan_id` INT DEFAULT 1");
+                }
+                if (!in_array('plan_expires_at', $existingCols)) {
+                    $db->exec("ALTER TABLE users ADD COLUMN `plan_expires_at` DATETIME NULL");
+                }
+                if (!in_array('restriction_reason', $existingCols)) {
+                    $db->exec("ALTER TABLE users ADD COLUMN `restriction_reason` VARCHAR(255) NULL");
+                }
+                if (!in_array('license_key', $existingCols)) {
+                    $db->exec("ALTER TABLE users ADD COLUMN `license_key` VARCHAR(100) NULL");
+                }
+            } else {
+                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `plan_id` INT DEFAULT 1");
+                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `plan_expires_at` DATETIME NULL");
+                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `restriction_reason` VARCHAR(255) NULL");
+                $db->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS `license_key` VARCHAR(100) NULL");
+            }
+        } catch (Exception $migEx) {
+            // Migration already applied or silent skip
+        }
+
         // Seed initial admin if not present
         $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE `role` = 'admin'");
         $stmt->execute();
         if ((int)$stmt->fetchColumn() === 0) {
             $adminPass = password_hash('NexAdmin2026!', PASSWORD_BCRYPT);
             $adminStmt = $db->prepare("INSERT INTO users (
-                `name`, `email`, `password_hash`, `role`, `user_type`, `institution`, `faculty_major`, `graduation_year`, `preferred_os`, `status`, `waitlist_number`
+                `name`, `email`, `password_hash`, `role`, `user_type`, `plan_id`, `institution`, `faculty_major`, `graduation_year`, `preferred_os`, `status`, `waitlist_number`
             ) VALUES (
-                'Nex Administrator', 'admin@nex-design.online', :pass, 'admin', 'professional', 'Nex Studio HQ', 'Product Design & Engineering', 2024, 'windows', 'active', 0
+                'Nex Administrator', 'admin@nex-design.online', :pass, 'admin', 'professional', 3, 'Nex Studio HQ', 'Product Design & Engineering', 2024, 'windows', 'active', 0
             )");
             $adminStmt->execute([':pass' => $adminPass]);
         }
