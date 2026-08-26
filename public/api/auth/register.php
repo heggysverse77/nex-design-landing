@@ -55,8 +55,8 @@ if ($checkStmt->fetch()) {
     Response::error('This email is already registered. Please sign in or use another email.');
 }
 
-// Calculate next waitlist number (MAX + 1)
-$maxStmt = $db->prepare("SELECT MAX(waitlist_number) FROM users WHERE `role` = 'user'");
+// Calculate next waitlist number (MAX + 1 among non-admin users)
+$maxStmt = $db->prepare("SELECT MAX(waitlist_number) FROM users WHERE `role` != 'admin' OR `role` IS NULL");
 $maxStmt->execute();
 $maxWaitlist = (int)$maxStmt->fetchColumn();
 $waitlistNumber = ($maxWaitlist > 0) ? $maxWaitlist + 1 : 1;
