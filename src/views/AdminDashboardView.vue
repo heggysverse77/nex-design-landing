@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import NexLogo from '@/components/landing/NexLogo.vue'
 
 const authenticated = ref(false)
@@ -547,8 +547,34 @@ async function handleLogout() {
   adminUser.value = null
 }
 
+const openMenuId = ref<string | null>(null)
+
+function toggleMenu(menuId: string, event?: Event) {
+  if (event) {
+    event.stopPropagation()
+  }
+  if (openMenuId.value === menuId) {
+    openMenuId.value = null
+  } else {
+    openMenuId.value = menuId
+  }
+}
+
+function closeAllMenus() {
+  openMenuId.value = null
+}
+
+function handleDocumentClick() {
+  openMenuId.value = null
+}
+
 onMounted(() => {
   checkAdminAuth()
+  window.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleDocumentClick)
 })
 </script>
 
@@ -831,7 +857,6 @@ onMounted(() => {
           <div class="text-3xl font-extrabold text-white font-mono mt-2">{{ stats.total_users }}</div>
           <div class="text-[10px] text-zinc-500 font-mono mt-1">Queue entries</div>
         </div>
-
         <div class="p-5 rounded-2xl bg-zinc-900/60 border border-white/10">
           <div class="text-[11px] font-mono uppercase tracking-wider text-rose-400">University Students</div>
           <div class="text-3xl font-extrabold text-white font-mono mt-2">{{ stats.students_count }}</div>
@@ -860,51 +885,113 @@ onMounted(() => {
       </div>
 
       <!-- BULK OPERATIONS TOOLBAR (Shows when users are selected) -->
-<div v-if="selectedUserIds.length > 0" class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-xl animate-fade-in">
+      <div v-if="selectedUserIds.length > 0" class="p-4 rounded-2xl bg-rose-950/50 border border-rose-500/40 flex flex-wrap items-center justify-between gap-4 shadow-2xl backdrop-blur-2xl animate-fade-in z-30 relative">
         <div class="flex items-center gap-3 text-rose-300 font-mono text-xs font-bold">
-          <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-500/30">
+          <span class="px-3 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 shadow-inner">
             {{ selectedUserIds.length }} Selected
           </span>
           <span>Execute Bulk Actions:</span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Bulk Plan Upgrade -->
-          <select
-            @change="executeBulkAction('plan', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
-          >
-            <option value="">⚙️ Bulk Upgrade Plan...</option>
-            <option value="starter">Starter Package (1 Dev)</option>
-            <option value="professional">Professional (3 Devs / 4K)</option>
-            <option value="teams">Teams Studio (10 Devs / 8K)</option>
-          </select>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Custom Bulk Plan Upgrade Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('bulk-plan', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#121117] hover:bg-[#1a1820] border border-rose-500/30 hover:border-rose-500/60 text-xs font-mono text-white transition cursor-pointer shadow-inner"
+            >
+              <span>⚙️ Bulk Upgrade Plan...</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'bulk-plan' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
 
-          <!-- Bulk Status Update -->
-          <select
-            @change="executeBulkAction('status', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
-          >
-            <option value="">🛡️ Bulk Access Action...</option>
-            <option value="active">✅ Activate Access</option>
-            <option value="invited_to_beta">✨ Invite to Beta</option>
-            <option value="restricted">🚫 Restrict Selected</option>
-            <option value="suspended">🔒 Suspend Selected</option>
-          </select>
+            <div v-if="openMenuId === 'bulk-plan'" class="absolute left-0 mt-2 w-56 rounded-xl bg-[#141218] border border-rose-500/30 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="executeBulkAction('plan', 'starter'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center gap-2 transition cursor-pointer">
+                <span>⚡</span>
+                <span>Starter Package (1 Dev)</span>
+              </button>
+              <button @click="executeBulkAction('plan', 'professional'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-rose-300 hover:bg-rose-500/15 flex items-center gap-2 transition cursor-pointer font-bold">
+                <span>💎</span>
+                <span>Professional (3 Devs / 4K)</span>
+              </button>
+              <button @click="executeBulkAction('plan', 'teams'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-purple-300 hover:bg-purple-500/15 flex items-center gap-2 transition cursor-pointer font-bold">
+                <span>👑</span>
+                <span>Teams Studio (10 Devs / 8K)</span>
+              </button>
+            </div>
+          </div>
 
-          <!-- Bulk Expiry Extension -->
-          <select
-            @change="executeBulkAction('expiry', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
-          >
-            <option value="">📅 Bulk Expiration Extend...</option>
-            <option value="30_days">⚡ Extend +30 Days (1 Month)</option>
-            <option value="3_months">🌟 Extend +3 Months (Quarter)</option>
-            <option value="4_months">🔥 Extend +4 Months (Third-Year)</option>
-            <option value="6_months">👑 Extend +6 Months (Half-Year)</option>
-            <option value="1_year">🚀 Extend +1 Year (Annual)</option>
-            <option value="lifetime">♾️ Set Lifetime (Unlimited)</option>
-          </select>
+          <!-- Custom Bulk Status Update Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('bulk-status', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#121117] hover:bg-[#1a1820] border border-rose-500/30 hover:border-rose-500/60 text-xs font-mono text-white transition cursor-pointer shadow-inner"
+            >
+              <span>🛡️ Bulk Access Action...</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'bulk-status' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            <div v-if="openMenuId === 'bulk-status'" class="absolute left-0 mt-2 w-52 rounded-xl bg-[#141218] border border-rose-500/30 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="executeBulkAction('status', 'active'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2 transition cursor-pointer font-bold">
+                <span>✅</span>
+                <span>Activate Access</span>
+              </button>
+              <button @click="executeBulkAction('status', 'invited_to_beta'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-blue-300 hover:bg-blue-500/10 flex items-center gap-2 transition cursor-pointer font-bold">
+                <span>✨</span>
+                <span>Invite to Beta</span>
+              </button>
+              <div class="border-t border-white/10 my-1"></div>
+              <button @click="executeBulkAction('status', 'restricted'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-rose-300 hover:bg-rose-500/15 flex items-center gap-2 transition cursor-pointer">
+                <span>🚫</span>
+                <span>Restrict Selected</span>
+              </button>
+              <button @click="executeBulkAction('status', 'suspended'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition cursor-pointer font-bold">
+                <span>🔒</span>
+                <span>Suspend Selected</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Bulk Expiry Extension Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('bulk-expiry', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#121117] hover:bg-[#1a1820] border border-rose-500/30 hover:border-rose-500/60 text-xs font-mono text-white transition cursor-pointer shadow-inner"
+            >
+              <span>📅 Bulk Expiration Extend...</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'bulk-expiry' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            <div v-if="openMenuId === 'bulk-expiry'" class="absolute left-0 mt-2 w-64 rounded-xl bg-[#141218] border border-rose-500/30 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="executeBulkAction('expiry', '30_days'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center justify-between transition cursor-pointer">
+                <span class="flex items-center gap-2"><span>⚡</span> <span>Extend +30 Days</span></span>
+                <span class="text-[10px] text-zinc-400">1 Month</span>
+              </button>
+              <button @click="executeBulkAction('expiry', '3_months'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center justify-between transition cursor-pointer">
+                <span class="flex items-center gap-2"><span>🌟</span> <span>Extend +3 Months</span></span>
+                <span class="text-[10px] text-blue-400 font-bold">Quarter</span>
+              </button>
+              <button @click="executeBulkAction('expiry', '4_months'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center justify-between transition cursor-pointer">
+                <span class="flex items-center gap-2"><span>🔥</span> <span>Extend +4 Months</span></span>
+                <span class="text-[10px] text-amber-400 font-bold">Third-Year</span>
+              </button>
+              <button @click="executeBulkAction('expiry', '6_months'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center justify-between transition cursor-pointer">
+                <span class="flex items-center gap-2"><span>👑</span> <span>Extend +6 Months</span></span>
+                <span class="text-[10px] text-purple-400 font-bold">Half-Year</span>
+              </button>
+              <button @click="executeBulkAction('expiry', '1_year'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-zinc-200 hover:bg-white/5 flex items-center justify-between transition cursor-pointer">
+                <span class="flex items-center gap-2"><span>🚀</span> <span>Extend +1 Year</span></span>
+                <span class="text-[10px] text-emerald-400 font-bold">Annual</span>
+              </button>
+              <div class="border-t border-white/10 my-1"></div>
+              <button @click="executeBulkAction('expiry', 'lifetime'); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-emerald-300 hover:bg-emerald-500/10 flex items-center justify-between transition cursor-pointer font-bold">
+                <span class="flex items-center gap-2"><span>♾️</span> <span>Set Lifetime Access</span></span>
+                <span class="text-[10px] text-emerald-400">Unlimited</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Bulk Key Regeneration -->
           <button
@@ -918,7 +1005,7 @@ onMounted(() => {
       </div>
 
       <!-- FILTER & SEARCH BAR -->
-      <div class="p-4 rounded-2xl bg-zinc-900/80 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-xl">
+      <div class="p-4 rounded-2xl bg-zinc-900/80 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-xl z-20 relative">
         <div class="relative w-full md:w-80">
           <input
             v-model="filters.search"
@@ -933,46 +1020,113 @@ onMounted(() => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          <select
-            v-model="filters.user_type"
-            @change="fetchUsers(1)"
-            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
-          >
-            <option value="">🎓 All Categories</option>
-            <option value="student">University Students</option>
-            <option value="graduate">Graduates & Pros</option>
-          </select>
+          <!-- Custom Categories Filter Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('filter-category', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#141217] hover:bg-[#1c1922] border border-white/10 hover:border-white/20 text-xs font-mono text-zinc-200 transition cursor-pointer shadow-inner"
+            >
+              <span>🎓 {{ filters.user_type === 'student' ? 'University Students' : (filters.user_type === 'graduate' ? 'Graduates & Pros' : 'All Categories') }}</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'filter-category' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
 
-          <select
-            v-model="filters.preferred_os"
-            @change="fetchUsers(1)"
-            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
-          >
-            <option value="">💻 All Platforms</option>
-            <option value="windows">Windows (x64)</option>
-            <option value="mac_arm">macOS (Apple Silicon)</option>
-            <option value="mac_intel">macOS (Intel)</option>
-            <option value="linux">Linux</option>
-          </select>
+            <div v-if="openMenuId === 'filter-category'" class="absolute right-0 mt-2 w-52 rounded-xl bg-[#141218] border border-white/15 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="filters.user_type = ''; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.user_type === '' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>All Categories</span>
+                <span v-if="filters.user_type === ''">✓</span>
+              </button>
+              <button @click="filters.user_type = 'student'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.user_type === 'student' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>University Students</span>
+                <span v-if="filters.user_type === 'student'">✓</span>
+              </button>
+              <button @click="filters.user_type = 'graduate'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.user_type === 'graduate' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>Graduates & Pros</span>
+                <span v-if="filters.user_type === 'graduate'">✓</span>
+              </button>
+            </div>
+          </div>
 
-          <select
-            v-model="filters.status"
-            @change="fetchUsers(1)"
-            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
-          >
-            <option value="">🚥 All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="invited_to_beta">Invited to Beta</option>
-            <option value="active">Active</option>
-            <option value="restricted">Restricted</option>
-            <option value="suspended">Suspended</option>
-          </select>
+          <!-- Custom Platform Filter Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('filter-os', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#141217] hover:bg-[#1c1922] border border-white/10 hover:border-white/20 text-xs font-mono text-zinc-200 transition cursor-pointer shadow-inner"
+            >
+              <span>💻 {{ filters.preferred_os ? (osLabels[filters.preferred_os] || filters.preferred_os) : 'All Platforms' }}</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'filter-os' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            <div v-if="openMenuId === 'filter-os'" class="absolute right-0 mt-2 w-56 rounded-xl bg-[#141218] border border-white/15 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="filters.preferred_os = ''; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.preferred_os === '' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>All Platforms</span>
+                <span v-if="filters.preferred_os === ''">✓</span>
+              </button>
+              <button @click="filters.preferred_os = 'windows'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.preferred_os === 'windows' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>Windows (x64)</span>
+                <span v-if="filters.preferred_os === 'windows'">✓</span>
+              </button>
+              <button @click="filters.preferred_os = 'mac_arm'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.preferred_os === 'mac_arm' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>macOS (Apple Silicon)</span>
+                <span v-if="filters.preferred_os === 'mac_arm'">✓</span>
+              </button>
+              <button @click="filters.preferred_os = 'mac_intel'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.preferred_os === 'mac_intel' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>macOS (Intel)</span>
+                <span v-if="filters.preferred_os === 'mac_intel'">✓</span>
+              </button>
+              <button @click="filters.preferred_os = 'linux'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.preferred_os === 'linux' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>Linux</span>
+                <span v-if="filters.preferred_os === 'linux'">✓</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Status Filter Popover -->
+          <div class="relative" @click.stop>
+            <button
+              @click="toggleMenu('filter-status', $event)"
+              type="button"
+              class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#141217] hover:bg-[#1c1922] border border-white/10 hover:border-white/20 text-xs font-mono text-zinc-200 transition cursor-pointer shadow-inner"
+            >
+              <span>🚥 {{ filters.status ? (filters.status.replace('_', ' ').toUpperCase()) : 'All Statuses' }}</span>
+              <svg class="w-3.5 h-3.5 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'filter-status' }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            <div v-if="openMenuId === 'filter-status'" class="absolute right-0 mt-2 w-52 rounded-xl bg-[#141218] border border-white/15 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+              <button @click="filters.status = ''; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === '' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>All Statuses</span>
+                <span v-if="filters.status === ''">✓</span>
+              </button>
+              <button @click="filters.status = 'pending'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === 'pending' ? 'bg-amber-500/10 text-amber-300 font-bold' : 'text-zinc-300'">
+                <span>Pending</span>
+                <span v-if="filters.status === 'pending'">✓</span>
+              </button>
+              <button @click="filters.status = 'invited_to_beta'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === 'invited_to_beta' ? 'bg-blue-500/10 text-blue-300 font-bold' : 'text-zinc-300'">
+                <span>Invited to Beta</span>
+                <span v-if="filters.status === 'invited_to_beta'">✓</span>
+              </button>
+              <button @click="filters.status = 'active'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === 'active' ? 'bg-emerald-500/10 text-emerald-300 font-bold' : 'text-zinc-300'">
+                <span>Active Access</span>
+                <span v-if="filters.status === 'active'">✓</span>
+              </button>
+              <div class="border-t border-white/10 my-1"></div>
+              <button @click="filters.status = 'restricted'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === 'restricted' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>Restricted</span>
+                <span v-if="filters.status === 'restricted'">✓</span>
+              </button>
+              <button @click="filters.status = 'suspended'; fetchUsers(1); closeAllMenus()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between hover:bg-white/5 transition cursor-pointer" :class="filters.status === 'suspended' ? 'bg-rose-500/10 text-rose-300 font-bold' : 'text-zinc-300'">
+                <span>Suspended</span>
+                <span v-if="filters.status === 'suspended'">✓</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- USERS DATA TABLE -->
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-hidden shadow-2xl backdrop-blur-xl">
-        <div class="overflow-x-auto">
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 shadow-2xl backdrop-blur-xl relative">
+        <div class="overflow-x-auto min-h-[350px] pb-16">
           <table class="w-full text-left text-xs">
             <thead class="bg-black/70 text-zinc-400 uppercase font-mono tracking-wider text-[10px] border-b border-white/10">
               <tr>
@@ -1014,20 +1168,68 @@ onMounted(() => {
                   <span class="text-[10px] text-zinc-500 font-mono">({{ osLabels[u.preferred_os] || u.preferred_os }})</span>
                 </td>
 
-                <!-- Package Plan Selector -->
+                <!-- Custom Bespoke Package Plan Popover -->
                 <td class="py-3.5 px-4">
-                  <select
-                    :value="getPlanSlug(u)"
-                    @change="saveUserPackageAndStatus(u, ($event.target as HTMLSelectElement).value, u.status)"
-                    :class="[
-                      'px-3 py-1.5 rounded-xl border text-[11px] font-mono font-bold focus:outline-none transition cursor-pointer shadow-inner',
-                      planBadges[getPlanSlug(u)] || 'bg-zinc-800 text-zinc-300'
-                    ]"
-                  >
-                    <option value="starter">Starter Package (1 Dev)</option>
-                    <option value="professional">Professional (3 Devs / 4K)</option>
-                    <option value="teams">Teams Studio (10 Devs / 8K)</option>
-                  </select>
+                  <div class="relative" @click.stop>
+                    <button
+                      @click="toggleMenu('plan-' + u.id, $event)"
+                      type="button"
+                      :class="[
+                        'flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-mono font-bold transition-all cursor-pointer shadow-inner min-w-[170px]',
+                        planBadges[getPlanSlug(u)] || 'bg-zinc-800 text-zinc-300'
+                      ]"
+                    >
+                      <span>{{ planLabels[getPlanSlug(u)] }}</span>
+                      <svg class="w-3 h-3 opacity-70 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'plan-' + u.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+
+                    <div v-if="openMenuId === 'plan-' + u.id" class="absolute left-0 mt-1.5 w-60 rounded-xl bg-[#141218] border border-white/20 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl animate-fade-in">
+                      <button
+                        @click="saveUserPackageAndStatus(u, 'starter', u.status); closeAllMenus()"
+                        class="w-full text-left p-2 rounded-lg transition text-xs font-mono flex items-center justify-between group hover:bg-white/5 cursor-pointer"
+                        :class="getPlanSlug(u) === 'starter' ? 'bg-zinc-800/80 text-white font-bold' : 'text-zinc-300'"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm">⚡</span>
+                          <div>
+                            <div class="text-[11px] font-bold">Starter Package</div>
+                            <div class="text-[9px] text-zinc-400 font-mono">1 Dev • 1080p Export</div>
+                          </div>
+                        </div>
+                        <span v-if="getPlanSlug(u) === 'starter'" class="text-rose-400 font-bold text-xs">✓</span>
+                      </button>
+
+                      <button
+                        @click="saveUserPackageAndStatus(u, 'professional', u.status); closeAllMenus()"
+                        class="w-full text-left p-2 rounded-lg transition text-xs font-mono flex items-center justify-between group hover:bg-white/5 cursor-pointer"
+                        :class="getPlanSlug(u) === 'professional' ? 'bg-rose-500/15 text-rose-300 font-bold border border-rose-500/30' : 'text-zinc-300'"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm">💎</span>
+                          <div>
+                            <div class="text-[11px] font-bold">Professional Package</div>
+                            <div class="text-[9px] text-zinc-400 font-mono">3 Devs • 4K & AI Features</div>
+                          </div>
+                        </div>
+                        <span v-if="getPlanSlug(u) === 'professional'" class="text-rose-400 font-bold text-xs">✓</span>
+                      </button>
+
+                      <button
+                        @click="saveUserPackageAndStatus(u, 'teams', u.status); closeAllMenus()"
+                        class="w-full text-left p-2 rounded-lg transition text-xs font-mono flex items-center justify-between group hover:bg-white/5 cursor-pointer"
+                        :class="getPlanSlug(u) === 'teams' ? 'bg-purple-500/15 text-purple-300 font-bold border border-purple-500/30' : 'text-zinc-300'"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm">👑</span>
+                          <div>
+                            <div class="text-[11px] font-bold">Teams Studio</div>
+                            <div class="text-[9px] text-zinc-400 font-mono">10 Devs • 8K & Cloud Render</div>
+                          </div>
+                        </div>
+                        <span v-if="getPlanSlug(u) === 'teams'" class="text-purple-400 font-bold text-xs">✓</span>
+                      </button>
+                    </div>
+                  </div>
                 </td>
 
                 <!-- Subscription Expiry Control -->
@@ -1099,18 +1301,44 @@ onMounted(() => {
                   </div>
                 </td>
 
+                <!-- Custom Bespoke Admin Actions Menu Popover -->
                 <td class="py-3.5 px-4 text-right">
-                  <select
-                    :value="u.status"
-                    @change="updateStatus(u.id, ($event.target as HTMLSelectElement).value)"
-                    class="px-3 py-1.5 rounded-xl bg-[#141217] border border-white/15 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition cursor-pointer shadow-inner"
-                  >
-                    <option value="pending">Mark Pending</option>
-                    <option value="active">Activate Access</option>
-                    <option value="invited_to_beta">Invite to Beta</option>
-                    <option value="restricted">🚫 Restrict Access</option>
-                    <option value="suspended">🔒 Suspend Account</option>
-                  </select>
+                  <div class="relative flex justify-end" @click.stop>
+                    <button
+                      @click="toggleMenu('action-' + u.id, $event)"
+                      type="button"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141217] hover:bg-white/10 border border-white/15 text-[11px] font-mono text-zinc-200 transition cursor-pointer shadow-inner"
+                    >
+                      <span>Action...</span>
+                      <svg class="w-3 h-3 text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': openMenuId === 'action-' + u.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+
+                    <div v-if="openMenuId === 'action-' + u.id" class="absolute right-0 mt-1.5 w-48 rounded-xl bg-[#141218] border border-white/20 p-1.5 shadow-2xl z-50 space-y-1 backdrop-blur-2xl text-left animate-fade-in">
+                      <button @click="updateStatus(u.id, 'active'); closeAllMenus()" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2 transition cursor-pointer">
+                        <span>✅</span>
+                        <span>Activate Access</span>
+                      </button>
+                      <button @click="updateStatus(u.id, 'invited_to_beta'); closeAllMenus()" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono text-blue-300 hover:bg-blue-500/10 flex items-center gap-2 transition cursor-pointer">
+                        <span>✨</span>
+                        <span>Invite to Beta</span>
+                      </button>
+                      <button @click="updateStatus(u.id, 'pending'); closeAllMenus()" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono text-amber-300 hover:bg-amber-500/10 flex items-center gap-2 transition cursor-pointer">
+                        <span>⏳</span>
+                        <span>Mark Pending</span>
+                      </button>
+
+                      <div class="border-t border-white/10 my-1"></div>
+
+                      <button @click="updateStatus(u.id, 'restricted'); closeAllMenus()" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono text-rose-300 hover:bg-rose-500/15 flex items-center gap-2 transition cursor-pointer">
+                        <span>🚫</span>
+                        <span>Restrict Access</span>
+                      </button>
+                      <button @click="updateStatus(u.id, 'suspended'); closeAllMenus()" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition cursor-pointer font-bold">
+                        <span>🔒</span>
+                        <span>Suspend Account</span>
+                      </button>
+                    </div>
+                  </div>
                 </td>
               </tr>
 
