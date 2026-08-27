@@ -110,9 +110,9 @@ class UserController
     }
 
     /**
-     * Feature 2: Set Subscription Expiry Date (30_days, 1_year, custom, lifetime)
+     * Feature 2: Set Subscription Expiry Date (30_days, 3_months, 4_months, 6_months, 1_year, custom, lifetime)
      * @param int $userId
-     * @param string|null $type ('30_days', '1_year', 'custom', 'lifetime')
+     * @param string|null $type ('30_days', '3_months', '4_months', '6_months', '1_year', 'custom', 'lifetime')
      * @param string|null $customDate Format: 'YYYY-MM-DD HH:MM:SS'
      * @return string|null Resulting expiration timestamp or null
      */
@@ -120,9 +120,15 @@ class UserController
     {
         $expiresAt = null;
 
-        if ($type === '30_days') {
+        if ($type === '30_days' || $type === '1_month') {
             $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
-        } elseif ($type === '1_year') {
+        } elseif ($type === '3_months' || $type === 'quarter') {
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+3 months'));
+        } elseif ($type === '4_months' || $type === 'third_year') {
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+4 months'));
+        } elseif ($type === '6_months' || $type === 'half_year') {
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+6 months'));
+        } elseif ($type === '1_year' || $type === '365_days') {
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 year'));
         } elseif ($type === 'custom' && !empty($customDate)) {
             $expiresAt = date('Y-m-d H:i:s', strtotime($customDate));

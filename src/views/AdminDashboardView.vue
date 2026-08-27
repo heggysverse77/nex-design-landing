@@ -313,6 +313,47 @@ const selectedUserForExpiry = ref<any>(null)
 const selectedExpiryType = ref('30_days')
 const customExpiryDateInput = ref('')
 
+interface DurationPreset {
+  id: string
+  label: string
+  subtext: string
+  badge: string
+  icon: string
+  popular?: boolean
+}
+
+const durationPresets: DurationPreset[] = [
+  { id: '30_days', label: '1 Month', subtext: '+30 Days', badge: '1M', icon: '⚡' },
+  { id: '3_months', label: '3 Months', subtext: 'Quarter / +90 Days', badge: 'Quarter', icon: '🌟', popular: true },
+  { id: '4_months', label: '4 Months', subtext: 'Third-Year / +120 Days', badge: 'Third-Year', icon: '🔥' },
+  { id: '6_months', label: '6 Months', subtext: 'Half-Year / +180 Days', badge: 'Half-Year', icon: '👑', popular: true },
+  { id: '1_year', label: '1 Year', subtext: 'Full Year / +365 Days', badge: 'Annual', icon: '🚀' },
+  { id: 'lifetime', label: 'Lifetime Access', subtext: 'Unlimited Access', badge: 'Permanent', icon: '♾️' },
+  { id: 'custom', label: 'Custom Date', subtext: 'Pick calendar date', badge: 'Calendar', icon: '📅' }
+]
+
+function getEstimatedDate(type: string, customDate?: string): string {
+  if (type === 'custom') {
+    return customDate || 'Choose custom date below'
+  }
+  if (type === 'lifetime' || type === 'none') {
+    return 'Lifetime (Never Expires)'
+  }
+  const d = new Date()
+  if (type === '30_days' || type === '1_month') {
+    d.setDate(d.getDate() + 30)
+  } else if (type === '3_months' || type === 'quarter') {
+    d.setMonth(d.getMonth() + 3)
+  } else if (type === '4_months' || type === 'third_year') {
+    d.setMonth(d.getMonth() + 4)
+  } else if (type === '6_months' || type === 'half_year') {
+    d.setMonth(d.getMonth() + 6)
+  } else if (type === '1_year' || type === '365_days') {
+    d.setFullYear(d.getFullYear() + 1)
+  }
+  return d.toISOString().split('T')[0]
+}
+
 const planLabels: Record<string, string> = {
   starter: 'Starter Package',
   professional: 'Professional Package',
@@ -323,6 +364,15 @@ const planBadges: Record<string, string> = {
   starter: 'bg-zinc-800 text-zinc-300 border-zinc-700',
   professional: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   teams: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+}
+
+const statusBadges: Record<string, string> = {
+  active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  invited_to_beta: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  restricted: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+  suspended: 'bg-rose-500/15 text-rose-400 border-rose-500/30'
 }
 
 function getPlanSlug(u: any): string {
@@ -584,47 +634,90 @@ onMounted(() => {
 
     <!-- SUBSCRIPTION EXPIRY MODAL -->
     <div v-if="expiryModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/80 backdrop-blur-md" @click="closeExpiryModal" />
-      <div class="relative w-full max-w-md rounded-2xl border border-blue-500/30 bg-[#141216] p-6 shadow-2xl z-10 text-white space-y-4">
-        <div class="flex items-center gap-3 text-blue-400">
-          <div class="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+      <div class="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity" @click="closeExpiryModal" />
+      <div class="relative w-full max-w-lg rounded-2xl border border-blue-500/30 bg-[#0f0e13] p-6 shadow-2xl z-10 text-white space-y-5 animate-fade-in">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <div class="flex items-center gap-3 text-blue-400">
+            <div class="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-lg shadow-inner">
+              📅
+            </div>
+            <div>
+              <h3 class="text-base font-bold tracking-tight text-white">Subscription Expiration</h3>
+              <p class="text-xs text-zinc-400 font-mono">Account: <span class="text-blue-300 font-semibold">{{ selectedUserForExpiry?.name }}</span> ({{ selectedUserForExpiry?.email }})</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-base font-bold">Subscription Expiration</h3>
-            <p class="text-xs text-zinc-400 font-mono">User: {{ selectedUserForExpiry?.name }}</p>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono uppercase text-zinc-400 mb-1.5">Select Expiration Period</label>
-          <select
-            v-model="selectedExpiryType"
-            class="w-full p-2.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+          <button 
+            @click="closeExpiryModal"
+            class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition text-xs"
           >
-            <option value="30_days">30 Days (+1 Month)</option>
-            <option value="1_year">365 Days (+1 Year)</option>
-            <option value="lifetime">Lifetime Access (Unlimited)</option>
-            <option value="custom">Custom Date</option>
-          </select>
+            ✕
+          </button>
         </div>
 
-        <div v-if="selectedExpiryType === 'custom'">
-          <label class="block text-[11px] font-mono uppercase text-zinc-400 mb-1.5">Custom Expiration Date (YYYY-MM-DD)</label>
+        <!-- Duration Presets Grid -->
+        <div>
+          <label class="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-2.5">Choose Expiration Period</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <button
+              v-for="preset in durationPresets"
+              :key="preset.id"
+              type="button"
+              @click="selectedExpiryType = preset.id"
+              :class="[
+                'relative flex flex-col p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer group',
+                selectedExpiryType === preset.id
+                  ? 'bg-blue-500/15 border-blue-500 text-white shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/40'
+                  : 'bg-zinc-900/60 border-white/10 text-zinc-300 hover:border-white/20 hover:bg-zinc-900/90'
+              ]"
+            >
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-base">{{ preset.icon }}</span>
+                <span 
+                  :class="[
+                    'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border',
+                    selectedExpiryType === preset.id
+                      ? 'bg-blue-500/30 text-blue-200 border-blue-400/40'
+                      : 'bg-white/5 text-zinc-400 border-white/10'
+                  ]"
+                >
+                  {{ preset.badge }}
+                </span>
+              </div>
+              <span class="text-xs font-bold leading-tight tracking-tight">{{ preset.label }}</span>
+              <span class="text-[10px] text-zinc-400 font-mono mt-0.5">{{ preset.subtext }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Calendar Date Picker -->
+        <div v-if="selectedExpiryType === 'custom'" class="p-3.5 rounded-xl bg-black/50 border border-blue-500/30 space-y-2 animate-fade-in">
+          <label class="block text-[11px] font-mono uppercase text-blue-300">Select Custom Expiration Date</label>
           <input
             v-model="customExpiryDateInput"
             type="date"
-            class="w-full p-2.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+            class="w-full p-2.5 rounded-xl bg-[#141216] border border-white/15 text-xs text-white focus:outline-none focus:border-blue-500 font-mono shadow-inner cursor-pointer"
           />
         </div>
 
+        <!-- Live Preview Banner -->
+        <div class="p-3 rounded-xl bg-zinc-900/80 border border-white/10 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-zinc-400 font-mono text-[11px]">Effective Expiry Date:</span>
+            <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              {{ getEstimatedDate(selectedExpiryType, customExpiryDateInput) }}
+            </span>
+          </div>
+          <span class="text-[10px] font-mono text-zinc-500 uppercase">Rust Verified</span>
+        </div>
+
+        <!-- Action Buttons -->
         <div class="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
             @click="closeExpiryModal"
-            class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-mono cursor-pointer"
+            class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-mono transition cursor-pointer"
           >
             Cancel
           </button>
@@ -632,9 +725,10 @@ onMounted(() => {
           <button
             type="button"
             @click="confirmExpiryChange"
-            class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold cursor-pointer"
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-mono font-bold shadow-lg shadow-blue-500/20 transition cursor-pointer flex items-center gap-2"
           >
-            Save Expiration
+            <span>Save & Apply Expiration</span>
+            <span>→</span>
           </button>
         </div>
       </div>
@@ -766,7 +860,7 @@ onMounted(() => {
       </div>
 
       <!-- BULK OPERATIONS TOOLBAR (Shows when users are selected) -->
-      <div v-if="selectedUserIds.length > 0" class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-xl animate-fade-in">
+<div v-if="selectedUserIds.length > 0" class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-xl animate-fade-in">
         <div class="flex items-center gap-3 text-rose-300 font-mono text-xs font-bold">
           <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-500/30">
             {{ selectedUserIds.length }} Selected
@@ -778,22 +872,22 @@ onMounted(() => {
           <!-- Bulk Plan Upgrade -->
           <select
             @change="executeBulkAction('plan', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3 py-1.5 rounded-xl bg-black/60 border border-rose-500/30 text-xs font-mono text-white focus:outline-none cursor-pointer"
+            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
           >
-            <option value="">Bulk Upgrade Plan...</option>
-            <option value="starter">Starter Package</option>
-            <option value="professional">Professional (4K)</option>
-            <option value="teams">Teams Studio (8K)</option>
+            <option value="">⚙️ Bulk Upgrade Plan...</option>
+            <option value="starter">Starter Package (1 Dev)</option>
+            <option value="professional">Professional (3 Devs / 4K)</option>
+            <option value="teams">Teams Studio (10 Devs / 8K)</option>
           </select>
 
           <!-- Bulk Status Update -->
           <select
             @change="executeBulkAction('status', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3 py-1.5 rounded-xl bg-black/60 border border-rose-500/30 text-xs font-mono text-white focus:outline-none cursor-pointer"
+            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
           >
-            <option value="">Bulk Access Action...</option>
-            <option value="active">Activate Access</option>
-            <option value="invited_to_beta">Invite to Beta</option>
+            <option value="">🛡️ Bulk Access Action...</option>
+            <option value="active">✅ Activate Access</option>
+            <option value="invited_to_beta">✨ Invite to Beta</option>
             <option value="restricted">🚫 Restrict Selected</option>
             <option value="suspended">🔒 Suspend Selected</option>
           </select>
@@ -801,46 +895,50 @@ onMounted(() => {
           <!-- Bulk Expiry Extension -->
           <select
             @change="executeBulkAction('expiry', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value=''"
-            class="px-3 py-1.5 rounded-xl bg-black/60 border border-rose-500/30 text-xs font-mono text-white focus:outline-none cursor-pointer"
+            class="px-3.5 py-2 rounded-xl bg-[#141217] border border-rose-500/30 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-rose-500 hover:border-rose-500/60 transition cursor-pointer shadow-inner"
           >
-            <option value="">Bulk Expiry Extend...</option>
-            <option value="30_days">Extend +30 Days</option>
-            <option value="1_year">Extend +1 Year</option>
-            <option value="lifetime">Set Lifetime</option>
+            <option value="">📅 Bulk Expiration Extend...</option>
+            <option value="30_days">⚡ Extend +30 Days (1 Month)</option>
+            <option value="3_months">🌟 Extend +3 Months (Quarter)</option>
+            <option value="4_months">🔥 Extend +4 Months (Third-Year)</option>
+            <option value="6_months">👑 Extend +6 Months (Half-Year)</option>
+            <option value="1_year">🚀 Extend +1 Year (Annual)</option>
+            <option value="lifetime">♾️ Set Lifetime (Unlimited)</option>
           </select>
 
           <!-- Bulk Key Regeneration -->
           <button
             @click="executeBulkAction('regenerate')"
-            class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold transition cursor-pointer"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-mono font-bold shadow-lg shadow-rose-600/20 transition cursor-pointer flex items-center gap-1.5"
           >
-            🔄 Regenerate Keys
+            <span>🔄</span>
+            <span>Regenerate Keys</span>
           </button>
         </div>
       </div>
 
       <!-- FILTER & SEARCH BAR -->
-      <div class="p-4 rounded-2xl bg-zinc-900/80 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="p-4 rounded-2xl bg-zinc-900/80 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-xl">
         <div class="relative w-full md:w-80">
           <input
             v-model="filters.search"
             @input="fetchUsers(1)"
             type="text"
             placeholder="Search name, email, university..."
-            class="w-full pl-9 pr-4 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
+            class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40 transition font-sans shadow-inner"
           />
-          <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           <select
             v-model="filters.user_type"
             @change="fetchUsers(1)"
-            class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-rose-500"
+            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
           >
-            <option value="">All Categories</option>
+            <option value="">🎓 All Categories</option>
             <option value="student">University Students</option>
             <option value="graduate">Graduates & Pros</option>
           </select>
@@ -848,10 +946,10 @@ onMounted(() => {
           <select
             v-model="filters.preferred_os"
             @change="fetchUsers(1)"
-            class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-rose-500"
+            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
           >
-            <option value="">All Platforms</option>
-            <option value="windows">Windows</option>
+            <option value="">💻 All Platforms</option>
+            <option value="windows">Windows (x64)</option>
             <option value="mac_arm">macOS (Apple Silicon)</option>
             <option value="mac_intel">macOS (Intel)</option>
             <option value="linux">Linux</option>
@@ -860,9 +958,9 @@ onMounted(() => {
           <select
             v-model="filters.status"
             @change="fetchUsers(1)"
-            class="px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-zinc-300 focus:outline-none focus:border-rose-500"
+            class="px-3.5 py-2.5 rounded-xl bg-[#121117] border border-white/10 text-xs text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 hover:border-white/20 transition cursor-pointer font-mono shadow-inner"
           >
-            <option value="">All Statuses</option>
+            <option value="">🚥 All Statuses</option>
             <option value="pending">Pending</option>
             <option value="invited_to_beta">Invited to Beta</option>
             <option value="active">Active</option>
@@ -873,12 +971,12 @@ onMounted(() => {
       </div>
 
       <!-- USERS DATA TABLE -->
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-hidden">
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-hidden shadow-2xl backdrop-blur-xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-black/60 text-zinc-400 uppercase font-mono tracking-wider text-[10px] border-b border-white/10">
+            <thead class="bg-black/70 text-zinc-400 uppercase font-mono tracking-wider text-[10px] border-b border-white/10">
               <tr>
-                <th class="py-3 px-3 w-10 text-center">
+                <th class="py-3.5 px-3 w-10 text-center">
                   <input
                     type="checkbox"
                     :checked="selectedUserIds.length > 0 && selectedUserIds.length === users.length"
@@ -886,13 +984,13 @@ onMounted(() => {
                     class="rounded bg-zinc-900 border-white/20 text-rose-600 focus:ring-0 cursor-pointer"
                   />
                 </th>
-                <th class="py-3 px-4">Queue #</th>
-                <th class="py-3 px-4">User & Email</th>
-                <th class="py-3 px-4">Package Plan</th>
-                <th class="py-3 px-4">Plan Expiration</th>
-                <th class="py-3 px-4">Rust License Key</th>
-                <th class="py-3 px-4">Status & Access</th>
-                <th class="py-3 px-4 text-right">Admin Actions</th>
+                <th class="py-3.5 px-4">Queue #</th>
+                <th class="py-3.5 px-4">User & Email</th>
+                <th class="py-3.5 px-4">Package Plan</th>
+                <th class="py-3.5 px-4">Plan Expiration</th>
+                <th class="py-3.5 px-4">Rust License Key</th>
+                <th class="py-3.5 px-4">Status & Access</th>
+                <th class="py-3.5 px-4 text-right">Admin Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-white/5 text-zinc-300">
@@ -922,7 +1020,7 @@ onMounted(() => {
                     :value="getPlanSlug(u)"
                     @change="saveUserPackageAndStatus(u, ($event.target as HTMLSelectElement).value, u.status)"
                     :class="[
-                      'px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold focus:outline-none cursor-pointer',
+                      'px-3 py-1.5 rounded-xl border text-[11px] font-mono font-bold focus:outline-none transition cursor-pointer shadow-inner',
                       planBadges[getPlanSlug(u)] || 'bg-zinc-800 text-zinc-300'
                     ]"
                   >
@@ -935,7 +1033,7 @@ onMounted(() => {
                 <!-- Subscription Expiry Control -->
                 <td class="py-3.5 px-4">
                   <div class="flex items-center gap-1.5">
-                    <span v-if="u.plan_expires_at" class="text-[11px] font-mono text-zinc-300">
+                    <span v-if="u.plan_expires_at" class="text-[11px] font-mono text-zinc-200 bg-white/5 px-2 py-0.5 rounded border border-white/10">
                       {{ u.plan_expires_at.split(' ')[0] }}
                     </span>
                     <span v-else class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
@@ -943,8 +1041,8 @@ onMounted(() => {
                     </span>
                     <button
                       @click="openExpiryModal(u)"
-                      class="p-1 rounded bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px]"
-                      title="Edit Expiration Date"
+                      class="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[11px] transition cursor-pointer"
+                      title="Edit Expiration Period"
                     >
                       📅
                     </button>
@@ -954,12 +1052,12 @@ onMounted(() => {
                 <!-- License Key with Revoke / Regenerate Button -->
                 <td class="py-3.5 px-4">
                   <div v-if="u.license_key" class="flex items-center gap-1.5">
-                    <span class="font-mono text-[10px] bg-black/60 px-2 py-1 rounded border border-white/10 text-rose-300 select-all">
+                    <span class="font-mono text-[10px] bg-black/60 px-2 py-1 rounded-lg border border-white/10 text-rose-300 select-all">
                       {{ u.license_key }}
                     </span>
                     <button
                       @click="copyLicenseKey(u.license_key)"
-                      class="p-1 rounded bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px]"
+                      class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] transition cursor-pointer"
                       title="Copy Key"
                     >
                       📋
@@ -968,7 +1066,7 @@ onMounted(() => {
                     <!-- Revoke & Regenerate Key Button -->
                     <button
                       @click="regenerateKey(u)"
-                      class="p-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px]"
+                      class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] transition cursor-pointer"
                       title="Revoke & Regenerate Key"
                     >
                       🔄
@@ -977,26 +1075,23 @@ onMounted(() => {
                   <button
                     v-else
                     @click="saveUserPackageAndStatus(u, getPlanSlug(u), u.status, undefined, true)"
-                    class="text-[10px] font-mono px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold cursor-pointer"
+                    class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition cursor-pointer shadow"
                   >
                     Generate Key
                   </button>
                 </td>
 
-                <!-- Status & Restriction Badge -->
+                <!-- Status Badge & Restriction Notes -->
                 <td class="py-3.5 px-4">
                   <div class="space-y-1">
-                    <span
-                      :class="[
-                        'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border inline-block',
-                        u.status === 'active' || u.status === 'invited_to_beta' || u.status === 'approved'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : (u.status === 'restricted' || u.status === 'suspended'
-                              ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20')
-                      ]"
-                    >
-                      {{ u.status === 'restricted' || u.status === 'suspended' ? '🚫 App Blocked (' + u.status + ')' : (u.status === 'invited_to_beta' ? 'Beta Active' : (u.status === 'active' ? 'Active' : 'Pending')) }}
+                    <span :class="['inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border capitalize', statusBadges[u.status] || 'bg-zinc-800 text-zinc-400 border-zinc-700']">
+                      <span class="w-1.5 h-1.5 rounded-full" :class="{
+                        'bg-emerald-400': u.status === 'active' || u.status === 'approved',
+                        'bg-blue-400': u.status === 'invited_to_beta',
+                        'bg-amber-400': u.status === 'pending',
+                        'bg-rose-400': u.status === 'restricted' || u.status === 'suspended'
+                      }"></span>
+                      {{ u.status?.replace('_', ' ') || 'pending' }}
                     </span>
                     <div v-if="u.restriction_reason" class="text-[10px] text-rose-400/90 font-mono italic truncate max-w-[150px]" :title="u.restriction_reason">
                       Note: {{ u.restriction_reason }}
@@ -1008,7 +1103,7 @@ onMounted(() => {
                   <select
                     :value="u.status"
                     @change="updateStatus(u.id, ($event.target as HTMLSelectElement).value)"
-                    class="px-2 py-1 rounded-lg bg-black/60 border border-white/10 text-[10px] font-mono text-zinc-300 focus:outline-none focus:border-rose-500 cursor-pointer"
+                    class="px-3 py-1.5 rounded-xl bg-[#141217] border border-white/15 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 transition cursor-pointer shadow-inner"
                   >
                     <option value="pending">Mark Pending</option>
                     <option value="active">Activate Access</option>
@@ -1037,14 +1132,14 @@ onMounted(() => {
             <button
               :disabled="pagination.current_page <= 1"
               @click="fetchUsers(pagination.current_page - 1)"
-              class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 cursor-pointer"
+              class="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 transition cursor-pointer"
             >
               Previous
             </button>
             <button
               :disabled="pagination.current_page >= pagination.total_pages"
               @click="fetchUsers(pagination.current_page + 1)"
-              class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 cursor-pointer"
+              class="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 transition cursor-pointer"
             >
               Next
             </button>
@@ -1055,3 +1150,28 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Dark custom styling for all HTML select options across browsers */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.85em;
+  padding-right: 2.2rem !important;
+}
+
+select option {
+  background-color: #121117 !important;
+  color: #f4f4f5 !important;
+  padding: 8px 12px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+</style>
