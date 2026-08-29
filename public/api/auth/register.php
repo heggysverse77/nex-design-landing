@@ -32,8 +32,8 @@ if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     Response::error('Please enter a valid email address.');
 }
 
-if (empty($password) || strlen($password) < 6) {
-    Response::error('Password must be at least 6 characters long.');
+if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) {
+    Response::error('Password must be at least 8 characters and include an uppercase letter and symbol.');
 }
 
 if (empty($institution)) {

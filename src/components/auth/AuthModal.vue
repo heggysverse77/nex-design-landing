@@ -90,6 +90,7 @@ async function handleSignIn() {
     if (data && !data.success) {
       errorMessage.value = data.error || 'Failed to sign in.'
     } else {
+      if (!data?.data?.user || !data?.data?.token) throw new Error('Invalid authentication response')
       const cached = localStorage.getItem('nex_user')
       const userPayload = data?.data?.user || (cached ? JSON.parse(cached) : {
         id: 1,
@@ -115,6 +116,10 @@ async function handleSignIn() {
       }, 700)
     }
   } catch (err: any) {
+    if (!import.meta.env.DEV) {
+      errorMessage.value = err instanceof Error ? err.message : 'Could not reach the account service.'
+      return
+    }
     const cached = localStorage.getItem('nex_user')
     const userPayload = cached ? JSON.parse(cached) : {
       id: 1,
@@ -194,6 +199,7 @@ async function handleSignUp() {
     if (data && !data.success) {
       errorMessage.value = data.error || 'Registration failed.'
     } else {
+      if (!data?.data?.user || !data?.data?.token) throw new Error('Invalid registration response')
       const userPayload = data?.data?.user || {
         id: Date.now(),
         name: signupForm.name,
@@ -221,6 +227,10 @@ async function handleSignUp() {
       }, 900)
     }
   } catch (err: any) {
+    if (!import.meta.env.DEV) {
+      errorMessage.value = err instanceof Error ? err.message : 'Could not reach the account service.'
+      return
+    }
     const userPayload = {
       id: Date.now(),
       name: signupForm.name,

@@ -107,6 +107,7 @@ async function handleSignIn() {
     if (data && !data.success) {
       errorMessage.value = data.error || 'Invalid credentials.'
     } else {
+      if (!data?.data?.user || !data?.data?.token) throw new Error('Invalid authentication response')
       const cached = localStorage.getItem('nex_user')
       const userPayload = data?.data?.user || (cached ? JSON.parse(cached) : {
         id: 1,
@@ -129,6 +130,10 @@ async function handleSignIn() {
       setUser(userPayload)
     }
   } catch (err) {
+    if (!import.meta.env.DEV) {
+      errorMessage.value = err instanceof Error ? err.message : 'Could not reach the account service.'
+      return
+    }
     // Fallback for local Vite development when PHP backend is offline
     const cached = localStorage.getItem('nex_user')
     const userPayload = cached ? JSON.parse(cached) : {
@@ -206,6 +211,7 @@ async function handleSignUp() {
     if (data && !data.success) {
       errorMessage.value = data.error || 'Registration could not be completed.'
     } else {
+      if (!data?.data?.user || !data?.data?.token) throw new Error('Invalid registration response')
       const userPayload = data?.data?.user || {
         id: Date.now(),
         name: signupForm.name,
@@ -230,6 +236,10 @@ async function handleSignUp() {
       setUser(userPayload)
     }
   } catch (err) {
+    if (!import.meta.env.DEV) {
+      errorMessage.value = err instanceof Error ? err.message : 'Could not reach the account service.'
+      return
+    }
     // Fallback for local Vite development when PHP backend is offline
     const userPayload = {
       id: Date.now(),

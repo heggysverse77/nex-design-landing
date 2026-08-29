@@ -70,7 +70,7 @@ class DesktopLicenseController
         }
 
         // 1. Action Check: Check if Account Status is Restricted or Suspended
-        if (in_array(strtolower($record['status']), ['restricted', 'suspended', 'blocked'])) {
+        if (!in_array(strtolower($record['status']), ['active', 'approved', 'invited_to_beta'], true)) {
             $reasonNote = !empty($record['restriction_reason']) 
                 ? $record['restriction_reason'] 
                 : 'Your account access has been suspended by the administrator.';
