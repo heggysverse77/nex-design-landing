@@ -20,7 +20,7 @@ if ($origin !== '') {
         $isAllowed = true;
     } elseif (preg_match('#^https?://(localhost|127\.0\.0\.1)(:\d+)?$#', $origin)) {
         $isAllowed = true;
-    } elseif (str_starts_with($origin, 'tauri://') || str_starts_with($origin, 'http://tauri.')) {
+    } elseif (str_starts_with($origin, 'tauri://') || str_starts_with($origin, 'http://tauri.') || str_starts_with($origin, 'https://tauri.') || $origin === 'null') {
         $isAllowed = true;
     }
 }

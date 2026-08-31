@@ -16,8 +16,28 @@ if (!$user || !password_verify($password, $user['password_hash'])) Response::err
 if (!OfflineLease::allowsDesktop((string)$user['status'])) Response::error('This account is not currently approved for desktop access.', 403, ['status' => $user['status']]);
 $db->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id')->execute([':id' => $user['id']]);
 $lease = OfflineLease::issue($user, $deviceId); $token = Auth::generateToken($user);
+$userPayload = [
+    'accountId' => (string)$user['id'],
+    'name' => $user['name'],
+    'email' => $user['email'],
+    'status' => OfflineLease::normalizeStatus((string)$user['status']),
+    'user_type' => $user['user_type'] ?? 'student',
+    'institution' => $user['institution'] ?? '',
+    'faculty_major' => $user['faculty_major'] ?? '',
+    'graduation_year' => isset($user['graduation_year']) ? (int)$user['graduation_year'] : 2026,
+    'student_id_number' => $user['student_id_number'] ?? '',
+    'current_role' => $user['current_role'] ?? '',
+    'portfolio_url' => $user['portfolio_url'] ?? '',
+    'preferred_os' => $user['preferred_os'] ?? 'windows',
+    'waitlist_number' => isset($user['waitlist_number']) ? (int)$user['waitlist_number'] : 14,
+    'plan_slug' => $user['plan_slug'] ?? 'starter',
+    'plan_name' => $user['plan_name'] ?? 'Starter Package',
+    'license_key' => $user['license_key'] ?? null
+];
+
 Response::success([
     'accessToken' => $token, 'accessTokenExpiresAt' => (time() + 86400 * 30) * 1000,
-    'user' => ['accountId' => (string)$user['id'], 'name' => $user['name'], 'email' => $user['email'], 'status' => OfflineLease::normalizeStatus((string)$user['status'])],
-    'plan' => ['id' => $user['plan_slug'], 'name' => $user['plan_name']], 'offlineLease' => $lease
+    'user' => $userPayload,
+    'plan' => ['id' => $user['plan_slug'], 'name' => $user['plan_name']],
+    'offlineLease' => $lease
 ], 'Desktop login successful.');
