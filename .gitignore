@@ -1,5 +1,4 @@
 node_modules
-dist
 .DS_Store
 .vscode
 *.log
@@ -8,5 +7,7 @@ config.local.php
 .env
 .env.local
 public/api/.env
+dist/*.zip
+dist/api/
 
 
