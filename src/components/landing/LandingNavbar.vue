@@ -52,7 +52,20 @@ onUnmounted(() => {
         <a href="#features" class="hover:text-white transition-colors">PRODUCT</a>
         <a href="#showcase" class="hover:text-white transition-colors">FEATURES</a>
         <a href="#design-guide" class="hover:text-white transition-colors">DESIGN GUIDE</a>
+        <a
+          v-if="currentUser"
+          href="/Nexdesign-App.zip"
+          download="Nexdesign-App.zip"
+          class="hover:text-white transition-colors flex items-center gap-1.5 text-rose-400 font-semibold"
+          title="Download Desktop App (.ZIP)"
+        >
+          <span>DOWNLOAD APP</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </a>
         <router-link
+          v-else
           to="/signup"
           class="hover:text-white transition-colors flex items-center gap-1"
         >
@@ -67,8 +80,19 @@ onUnmounted(() => {
 
       <!-- Right: Action Buttons -->
       <div class="flex items-center gap-3">
-        <!-- If logged in: User Profile Button -->
+        <!-- If logged in: Download App Button & User Profile Button -->
         <template v-if="currentUser">
+          <a
+            href="/Nexdesign-App.zip"
+            download="Nexdesign-App.zip"
+            class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold tracking-wide transition-all duration-200 shadow-sm text-white hover:opacity-90 active:scale-95 cursor-pointer bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 border border-rose-500/40"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Download App</span>
+          </a>
+
           <router-link
             to="/account"
             class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all shadow-sm"

@@ -2,9 +2,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHeroCustomizer } from '@/composables/useHeroCustomizer'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const { heroState } = useHeroCustomizer()
+const { currentUser } = useAuth()
 const heroRef = ref<HTMLElement | null>(null)
 const lavaCanvasRef = ref<HTMLCanvasElement | null>(null)
 
@@ -463,7 +465,24 @@ function startDesigning() {
           </svg>
         </router-link>
 
+        <a
+          v-if="currentUser"
+          href="/Nexdesign-App.zip"
+          download="Nexdesign-App.zip"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 font-bold text-xs tracking-widest font-mono transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          :style="{
+            backgroundColor: heroState.secondaryBtnBg,
+            color: heroState.secondaryBtnTextColor
+          }"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>{{ heroState.secondaryBtnText }}</span>
+        </a>
+
         <router-link
+          v-else
           to="/early-access"
           class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 font-bold text-xs tracking-widest font-mono transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
           :style="{

@@ -158,6 +158,15 @@ async function handleSignIn() {
   }
 }
 
+function downloadApp() {
+  const link = document.createElement('a')
+  link.href = '/Nexdesign-App.zip'
+  link.download = 'Nexdesign-App.zip'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 async function handleSignUp() {
   errorMessage.value = ''
   successMessage.value = ''
@@ -230,10 +239,11 @@ async function handleSignUp() {
       }
       const token = data?.data?.token || 'dev_token_' + Date.now()
 
-      successMessage.value = 'Account created! Your early access position is reserved.'
+      successMessage.value = 'Account created! Your desktop app (.ZIP) package download has started.'
       localStorage.setItem('nex_auth_token', token)
       localStorage.setItem('nex_user', JSON.stringify(userPayload))
       setUser(userPayload)
+      downloadApp()
     }
   } catch (err) {
     if (!import.meta.env.DEV) {
@@ -259,10 +269,11 @@ async function handleSignUp() {
     }
     const token = 'dev_token_' + Date.now()
 
-    successMessage.value = 'Account created! Your early access position is reserved.'
+    successMessage.value = 'Account created! Your desktop app (.ZIP) package download has started.'
     localStorage.setItem('nex_auth_token', token)
     localStorage.setItem('nex_user', JSON.stringify(userPayload))
     setUser(userPayload)
+    downloadApp()
   } finally {
     loading.value = false
   }
@@ -286,15 +297,30 @@ async function handleSignUp() {
         <span class="font-bold text-xs tracking-[0.25em] text-[#f5f4f0] font-sans">NEX DESIGN</span>
       </router-link>
 
-      <router-link
-        to="/"
-        class="text-[11px] font-mono tracking-widest text-[#a1a1aa] hover:text-white transition flex items-center gap-1.5"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span>BACK TO STUDIO</span>
-      </router-link>
+      <div class="flex items-center gap-3 sm:gap-4">
+        <a
+          v-if="currentUser"
+          href="/Nexdesign-App.zip"
+          download="Nexdesign-App.zip"
+          class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-mono text-xs font-bold tracking-wide transition shadow-md border border-rose-500/40"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Download App</span>
+        </a>
+
+        <router-link
+          to="/"
+          class="text-[11px] font-mono tracking-widest text-[#a1a1aa] hover:text-white transition flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span class="hidden sm:inline">BACK TO STUDIO</span>
+          <span class="sm:hidden">STUDIO</span>
+        </router-link>
+      </div>
     </header>
 
     <!-- Main Content Container -->
@@ -321,6 +347,35 @@ async function handleSignUp() {
               {{ currentUser.status === 'invited_to_beta' ? 'Beta Access Active' : 'Reserved for Wave 1' }}
             </span>
           </div>
+        </div>
+
+        <!-- Download App Feature Banner -->
+        <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-rose-950/40 via-red-900/20 to-black/60 border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+          <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-rose-600/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-2">
+                <span>Nex Design Desktop App</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">ZIP • ~35.4 MB</span>
+              </div>
+              <div class="text-[11px] text-zinc-400 mt-0.5">Standalone client ready for your desktop workflow</div>
+            </div>
+          </div>
+
+          <a
+            href="/Nexdesign-App.zip"
+            download="Nexdesign-App.zip"
+            class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-mono text-xs font-bold tracking-wider text-center transition shadow-lg shadow-rose-950/40 shrink-0 flex items-center justify-center gap-2"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>DOWNLOAD .ZIP</span>
+          </a>
         </div>
 
         <!-- User Credentials Summary -->
@@ -355,7 +410,7 @@ async function handleSignUp() {
         <div class="mt-8 flex items-center gap-3">
           <router-link
             to="/"
-            class="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold tracking-wider text-center transition shadow-lg shadow-rose-950/40"
+            class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-mono text-xs font-bold tracking-wider text-center transition border border-white/10"
           >
             EXPLORE STUDIO
           </router-link>

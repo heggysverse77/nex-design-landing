@@ -146,6 +146,15 @@ async function handleSignIn() {
   }
 }
 
+function downloadApp() {
+  const link = document.createElement('a')
+  link.href = '/Nexdesign-App.zip'
+  link.download = 'Nexdesign-App.zip'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 async function handleSignUp() {
   errorMessage.value = ''
   successMessage.value = ''
@@ -218,9 +227,10 @@ async function handleSignUp() {
       }
       const token = data?.data?.token || 'dev_token_' + Date.now()
 
-      successMessage.value = 'Early access reserved successfully!'
+      successMessage.value = 'Early access reserved! App package download starting...'
       localStorage.setItem('nex_auth_token', token)
       localStorage.setItem('nex_user', JSON.stringify(userPayload))
+      downloadApp()
       setTimeout(() => {
         emit('success', userPayload)
         emit('close')
@@ -249,9 +259,10 @@ async function handleSignUp() {
     }
     const token = 'dev_token_' + Date.now()
 
-    successMessage.value = 'Early access reserved successfully!'
+    successMessage.value = 'Early access reserved! App package download starting...'
     localStorage.setItem('nex_auth_token', token)
     localStorage.setItem('nex_user', JSON.stringify(userPayload))
+    downloadApp()
     setTimeout(() => {
       emit('success', userPayload)
       emit('close')

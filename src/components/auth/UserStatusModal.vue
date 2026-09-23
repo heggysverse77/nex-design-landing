@@ -85,20 +85,33 @@ const osNames: Record<string, string> = {
       </div>
 
       <!-- Action Buttons -->
-      <div class="mt-6 flex items-center gap-3">
+      <div class="mt-6 flex flex-col gap-2.5">
         <a 
-          v-if="user.role === 'admin'"
-          href="/admin"
-          class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs text-center transition"
+          href="/Nexdesign-App.zip"
+          download="Nexdesign-App.zip"
+          class="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-semibold text-xs text-center transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
         >
-          Admin Portal
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Download Desktop App (.ZIP)</span>
         </a>
-        <button
-          @click="emit('logout')"
-          class="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-medium text-xs transition border border-white/10"
-        >
-          Sign Out
-        </button>
+
+        <div class="flex items-center gap-2.5">
+          <a 
+            v-if="user.role === 'admin'"
+            href="/admin"
+            class="flex-1 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs text-center transition"
+          >
+            Admin Portal
+          </a>
+          <button
+            @click="emit('logout')"
+            class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-medium text-xs transition border border-white/10"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
     </div>
