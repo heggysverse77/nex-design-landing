@@ -206,6 +206,20 @@ HTML;
     exit;
 }
 
+// Store session token for automatic desktop retrieval via polling
+if ($isDesktop && !empty($deviceId)) {
+    $tokensDir = __DIR__ . '/../data/auth_sessions';
+    if (!is_dir($tokensDir)) {
+        @mkdir($tokensDir, 0755, true);
+    }
+    $deviceHash = hash('sha256', $deviceId);
+    $sessionFile = $tokensDir . '/' . $deviceHash . '.json';
+    @file_put_contents($sessionFile, json_encode([
+        'token' => $encodedToken,
+        'created_at' => time()
+    ]), LOCK_EX);
+}
+
 // If desktop login, render the authorization confirmation and copy card:
 header('Content-Type: text/html; charset=UTF-8');
 $displayName = htmlspecialchars($user['name']);
@@ -327,6 +341,11 @@ $displayEmail = htmlspecialchars($user['email']);
             <strong style="color:#fff"><?= $displayName ?></strong>
             <span style="color:#71717a">•</span>
             <span style="color:#a1a1aa"><?= $displayEmail ?></span>
+        </div>
+
+        <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:14px;margin-bottom:20px;font-size:13px;color:#34d399;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <strong>Connected! NexDesign Desktop will open automatically.</strong>
         </div>
 
         <a id="launchBtn" href="nexdesign://auth?token=<?= $encodedToken ?>" class="btn-launch">
