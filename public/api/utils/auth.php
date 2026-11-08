@@ -37,8 +37,8 @@ class Auth {
         }
         
         $userId = $_SESSION['user_id'] ?? null;
-        
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+
+        $authHeader = self::authorizationHeader();
         if (!$userId && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
             $decoded = self::verifyToken($matches[1]);
             if (!empty($decoded['id'])) $userId = (int)$decoded['id'];
@@ -53,6 +53,23 @@ class Auth {
         $stmt->execute([':id' => $userId]);
         $user = $stmt->fetch();
         return $user ?: null;
+    }
+
+    /**
+     * The raw Authorization header. Apache/LiteSpeed under PHP-FPM/CGI (Hostinger) strip it
+     * from $_SERVER unless it is re-exported, so check every place it can surface. The desktop
+     * app depends on this: cross-site requests never carry the SameSite=Lax session cookie.
+     */
+    private static function authorizationHeader(): string {
+        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $key) {
+            if (!empty($_SERVER[$key])) return (string)$_SERVER[$key];
+        }
+        if (function_exists('getallheaders')) {
+            foreach (getallheaders() as $name => $value) {
+                if (strcasecmp($name, 'Authorization') === 0) return (string)$value;
+            }
+        }
+        return '';
     }
 
     public static function requireAuth(): array {

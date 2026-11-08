@@ -13,6 +13,14 @@ class UserController
         $this->db = Database::getConnection();
     }
 
+    /** Admin rows are excluded from listings, so they must not be editable through them either. */
+    private function isAdminAccount(int $userId): bool
+    {
+        $stmt = $this->db->prepare("SELECT `role` FROM users WHERE `id` = :id");
+        $stmt->execute([':id' => $userId]);
+        return $stmt->fetchColumn() === 'admin';
+    }
+
     /**
      * Action Function 1: Change User Package Plan
      * @param int $userId
@@ -51,9 +59,14 @@ class UserController
      * @param string|null $reason Note displayed to user in Rust Desktop App
      * @return array
      */
+    public const ALLOWED_STATUSES = ['active', 'approved', 'pending', 'invited_to_beta', 'suspended', 'restricted', 'deactivated'];
+
     public function restrictUser(int $userId, string $status, ?string $reason = null): array
     {
         $status = strtolower(trim($status));
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            Response::error("Invalid status '{$status}'.", 422);
+        }
         $reasonNote = trim($reason ?? '');
 
         if (in_array($status, ['active', 'invited_to_beta', 'approved'])) {
@@ -155,7 +168,7 @@ class UserController
 
         foreach ($userIds as $id) {
             $userId = (int)$id;
-            if ($userId <= 0) continue;
+            if ($userId <= 0 || $this->isAdminAccount($userId)) continue;
 
             if (!empty($updates['plan_slug'])) {
                 $this->changePlan($userId, $updates['plan_slug']);
@@ -206,6 +219,9 @@ class UserController
 
         if ($userId <= 0) {
             Response::error('Invalid user ID provided.');
+        }
+        if ($this->isAdminAccount($userId)) {
+            Response::error('Administrator accounts cannot be modified from the dashboard.', 403);
         }
 
         // Fetch current user with joined plan

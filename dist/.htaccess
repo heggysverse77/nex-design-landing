@@ -1,6 +1,14 @@
+# Forward the Authorization header to PHP (stripped by default under FPM/CGI). Required for
+# Bearer-token auth from the desktop app's admin dashboard and account API.
+<IfModule mod_setenvif.c>
+  SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  RewriteCond %{HTTP:Authorization} .+
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
   # Allow direct execution of API and existing static files
   RewriteCond %{REQUEST_URI} ^/api/ [NC,OR]
